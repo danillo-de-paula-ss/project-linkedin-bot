@@ -1,24 +1,30 @@
 import os
+import sys
 from cx_Freeze import setup, Executable
 
 path = os.path.dirname(__file__) + os.sep
 # O que deve ser incluído na pasta final
-FILES = [path + 'settings.txt']
-INCLUDES = ['threading', 'os', 'sys', 'time', 'driver_settings']
-PACKAGES = ['selenium']
-EXCLUDES = ['tkinter']
+FILES = []
+INCLUDES = ['threading', 'os', 'sys', 'time']
+PACKAGES = ['selenium', 'PySimpleGUI', 'utilities']
+EXCLUDES = []
+
+base = None
+# if (sys.platform == "win32"):
+#     base = "Win32GUI"    # Tells the build script to hide the console.
 
 # Saída de arquivos
 config = Executable(
-    script=path + 'main.py'
+    script=path + 'main_gui.py',
+    base=base
 )
 
 # Configurar o cx-freeze (detalhes do programa)
 setup(
-    name='Linkedin Bot',
-    version='1.0.0',
+    name='bot_linkedin',
+    version='1.0.1',
     description='Bot para Linkedin',
-    author='DanilloDePaula',
+    author='DanilloDePaulaSS',
     options={'build_exe': {'include_files': FILES,
                            'packages': PACKAGES,
                            'includes': INCLUDES,
