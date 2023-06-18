@@ -58,22 +58,24 @@ def get_posts(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
         comments: list[str] = []
         for post in posts:
             text = ''
-            try:
-                text = post.find_element(By.XPATH, './div/div[4]/div/div/div[5]/ul/li/button/span').text
-            except NoSuchElementException:
-                text = '0 comentários'
+            for k in range(5, 10):
+                try:
+                    text = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{k}]/ul/li/button/span').text
+                    break
+                except NoSuchElementException:
+                    text = '0 comentários'
             comments.append(text)
         
         # make values for combo element
-        values_combo = [t[:30] + ' - ' + r[:-2] + ' - ' + c for t, r, c in zip(texts, last_releases, comments)]
+        values_combo = [t[:30] + '[...] - ' + r[:-2] + ' - ' + c for t, r, c in zip(texts, last_releases, comments)]
 
         window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
         window.write_event_value('number_of_posts_found', values_combo)
-    except TimeoutException:
+    except (TimeoutException, NoSuchElementException):
         window['-OUT-'].update('ERRO! Postagens não encontradas.\n', text_color_for_value='red', append=True)
         window.write_event_value('number_of_posts_not_found', '')
 
-def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', link_to_share: str = '', post_selected: int = 0, wait_time: int = 0):
+def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', text_to_write: str = '', post_selected: int = 0, wait_time: int = 0):
     thread = threading.current_thread()
     stop = False
     while not stop:
@@ -85,21 +87,27 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
         # //div[@class="scaffold-finite-scroll__content"]/div
         posts: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="scaffold-finite-scroll__content"]/div')))
         # y = 0
+        num = 0
         while (x := 0) >= 0:
             try:
                 post = posts[post_selected]
-                # ./div/div[4]/div/div/div[5]/ul/li/button
-                post.find_element(By.XPATH, './div/div[4]/div/div/div[5]/ul/li/button').click()
+                for k in range(5, 10):
+                    try:
+                        # ./div/div[4]/div/div/div[5 ou 6]/ul/li/button
+                        post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{k}]/ul/li/button').click()
+                        num = k
+                        break
+                    except NoSuchElementException:
+                        pass
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
                 break
             except IndexError:
-                window['-OUT-'].update('Erro! Postagem não encontrada.\n', text_color_for_value='red', append=True)
-                stop = True
+                num = -1
                 break
-            except NoSuchElementException:
-                window['-OUT-'].update('Erro! Postagem não tem comentários.\n', text_color_for_value='red', append=True)
-                stop = True
-                break
+            # except NoSuchElementException:
+            #     window['-OUT-'].update('Erro! Postagem não tem comentários.\n', text_color_for_value='red', append=True)
+            #     stop = True
+            #     break
             except ElementClickInterceptedException:
                 x += 10
                 driver.execute_script(f"window.scrollTo(0, {x})")
@@ -107,9 +115,16 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
                 # driver.execute_script("location.reload()")
                 # sleep(5)
                 # continue
-        if stop:
+
+        if num <= 0:
+            if num == 0:
+                window['-OUT-'].update('Erro! Postagem não tem comentários.\n', text_color_for_value='red', append=True)
+            else:
+                window['-OUT-'].update('Erro! Postagem não encontrada.\n', text_color_for_value='red', append=True)
+            stop = True
             window.write_event_value('bot_stopped', '')
             continue
+            
         window['-OUT-'].update(f'{post_selected + 1}° postagem selecionada.\n', text_color_for_value='green', append=True)
         sleep(2)
 
@@ -118,8 +133,8 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
         # y = 0
         while (y := 0) >= 0:
             try:
-                # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div[2]/button
-                post.find_element(By.XPATH, './div/div[4]/div/div/div[5]/div[3]/div[3]/div[2]/button').click()
+                # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div[2]/button
+                post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div[2]/button').click()
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
                 break
             except NoSuchElementException:
@@ -127,28 +142,31 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
             except ElementClickInterceptedException:
                 y += 50
                 driver.execute_script(f"window.scrollTo(0, {y})")
+        # if stop:
+        #     window.write_event_value('bot_stopped', '')
+        #     continue
         window['-OUT-'].update(f'OK!\n', text_color_for_value='green', append=True)
         sleep(2)
 
         # main bot
         window['-OUT-'].update(f'Identificando comentários que possuem a palavra-chave "{key_message}"... ', append=True)
 
-        # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[1 ou 2]/div[3]/div/div/span/div/span
-        comments = post.find_elements(By.XPATH, './div/div[4]/div/div/div[5]/div[3]/div[3]/div/article/div[3]/div/div/span/div/span')
+        # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[3]/div/div/span/div/span
+        comments = post.find_elements(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div/article/div[3]/div/div/span/div/span')
         comments_text: list[str] = list(map(lambda w: w.text, comments))
 
         length = len(list(filter(lambda t: t.lower() == key_message.lower(), comments_text)))
         window['-OUT-'].update(f'{length} comentário{"s" if length > 1 else ""}.\n', text_color_for_value='green', append=True)
 
-        # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[2]/div/div[3]/button
-        response_buttons = post.find_elements(By.XPATH, './div/div[4]/div/div/div[5]/div[3]/div[3]/div/article/div[4]/div[2]/div/div[3]/button')
+        # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[2]/div/div[3]/button
+        response_buttons = post.find_elements(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div/article/div[4]/div[2]/div/div[3]/button')
         for k, response_button, text in zip(range(1, len(comments_text) + 1), response_buttons, comments_text):
             # click on the load previous messages button
             # y = 0
             while (z := 0) >= 0:
                 try:
-                    # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article/div[4]/div[4]/div/button
-                    post.find_element(By.XPATH, f'./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div/button').click()
+                    # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article/div[4]/div[4]/div/button
+                    post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div/button').click()
                     break
                 except NoSuchElementException:
                     break
@@ -157,39 +175,64 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
                     driver.execute_script(f"window.scrollTo(0, {z})") 
 
             # detect if link has been shared
-            # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[1]/article[3 ou 4]/div[3]/div/div/span/div/span
-            replies = post.find_elements(By.XPATH, f'./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[1]/article/div[3]/div/div/span/div/span')
-            href_texts = []
-            if replies:
-                for reply in replies:
-                    try:
-                        href_text = reply.find_element(By.XPATH, './a').text
-                        href_texts.append(href_text)
-                    except NoSuchElementException:
-                        pass
+            # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[1]/article[3 ou 4]/div[3]/div/div/span/div/span
+            replies = post.find_elements(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[1]/article/div[3]/div/div/span/div/span')
+            replies_text = [reply.text for reply in replies]
+            # href_texts = []
+            # if replies:
+            #     for reply in replies:
+            #         try:
+            #             href_text = reply.find_element(By.XPATH, './a').text
+            #             href_texts.append(href_text)
+            #         except NoSuchElementException:
+            #             pass
             
+            # stop bot if attribute do_run is False
+            if not getattr(thread, 'do_run', True):
+                stop = True
+                break
+
             # detect key message in comments
-            if text.lower() == key_message.lower() and link_to_share not in href_texts:
-                response_button.click()
-                window['-OUT-'].update('Compartilhando link... ', append=True)
+            # if text.lower() == key_message.lower() and link_to_share not in href_texts:
+            if text.lower() == key_message.lower() and text_to_write not in replies_text:
+                while (z1 := 0) >= 0:
+                    try:
+                        response_button.click()
+                        break
+                    except ElementClickInterceptedException:
+                        z1 += 10
+                        driver.execute_script(f"window.scrollTo(0, {z1})") 
+                # window['-OUT-'].update('Compartilhando link... ', append=True)
+                window['-OUT-'].update('Respondendo comentário... ', append=True)
                 sleep(2)
-                # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[3 ou 4]/div[2]/form/div/div/div/div/div/div/div/div/p
-                field = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[{len(replies) + 1}]/div[2]/form/div/div/div/div/div/div/div/div/p')
-                field.send_keys(link_to_share)
+                # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[3 ou 4]/div[2]/form/div/div/div/div/div/div/div/div/p
+                field = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[{len(replies) + 1}]/div[2]/form/div/div/div/div/div/div/div/div/p')
+                field.send_keys(text_to_write)
                 sleep(2)
-                # ./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[3 ou 4]/div[2]/form/div[2]/button
-                button = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[5]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[{len(replies) + 1}]/div[2]/form/div[2]/button')
+                # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[3 ou 4]/div[2]/form/div[2]/button
+                button = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{num}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[{len(replies) + 1}]/div[2]/form/div[2]/button')
                 button.click()
                 window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
                 sleep(2)
-            k += 1
-        window['-OUT-'].update(f'Esperando {wait_time / 60} minuto{"s" if wait_time / 60 > 1 else ""}... ', append=True)
+            elif text.lower() == key_message.lower() and text_to_write in replies_text:
+                window['-OUT-'].update('Comentário já respondido.\n', append=True)
+            # k += 1
+        
+        # stop bot
+        if stop:
+            window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
+            window.write_event_value('bot_stopped', '')
+            continue
+        
+        window['-OUT-'].update(f'Esperando {int(wait_time / 60)} minuto{"s" if wait_time / 60 > 1 else ""}... ', append=True)
         for _ in range(wait_time):
             if not getattr(thread, 'do_run', True):
                 stop = True
                 break
             else:
                 sleep(1)
+        
+        # stop bot
         if stop:
             window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
             window.write_event_value('bot_stopped', '')

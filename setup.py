@@ -5,7 +5,7 @@ from cx_Freeze import setup, Executable
 path = os.path.dirname(__file__) + os.sep
 # O que deve ser incluído na pasta final
 FILES = []
-INCLUDES = ['threading', 'os', 'sys', 'time']
+INCLUDES = ['threading', 'os', 'sys', 'time', 'argparse']
 PACKAGES = ['selenium', 'PySimpleGUI', 'utilities']
 EXCLUDES = []
 
@@ -15,14 +15,14 @@ base = None
 
 # Saída de arquivos
 config = Executable(
-    script=path + 'main_gui.py',
+    script=path + 'bot_linkedin.py',
     base=base
 )
 
 # Configurar o cx-freeze (detalhes do programa)
 setup(
     name='bot_linkedin',
-    version='1.0.1',
+    version='1.0.3',
     description='Bot para Linkedin',
     author='DanilloDePaulaSS',
     options={'build_exe': {'include_files': FILES,
