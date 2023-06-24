@@ -1,4 +1,4 @@
-from driver_settings import start_driver
+from utilities.driver_settings import start_driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.remote.webelement import WebElement

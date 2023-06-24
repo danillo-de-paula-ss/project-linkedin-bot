@@ -8,7 +8,6 @@ from selenium.common.exceptions import *
 import logging
 import os
 
-
 def start_driver():
     LOGGER.setLevel(logging.WARNING)
     logging.getLogger('WDM').setLevel(logging.NOTSET)
