@@ -5,14 +5,13 @@ import PySimpleGUI as sg
 import threading
 import argparse
 import os
-import json
 import pickle
 from cryptography.fernet import Fernet
 
 class Program:
     def __init__(self, dev_mode: bool = False) -> None:
         sg.theme('Reddit')
-        self.dev_mode = dev_mode
+        self.dev_mode = not dev_mode
         self.key = b'C5S5cpuAyO_XDOHX2Rr5MnHu64Ne6Bzg_pKsk1l9zag='
         my_username = 'nerdpesquisando@gmail.com'
         my_password = 'sagavazas1234'
@@ -39,8 +38,8 @@ class Program:
         column1 = [
             [sg.Text('Messagem chave:')],
             [sg.Text('Texto para o bot escrever:')],
-            [sg.Button('Importar texto', key='-IMPORT-TEXT-', size=(18, 0))],
-            [sg.Button('Limpar texto', key='-CLEAN-ALL-', size=(18, 0))],
+            [sg.Button('Importar texto', key='-IMPORT-TEXT-', disabled=False, size=(18, 0))],
+            [sg.Button('Limpar texto', key='-CLEAN-ALL-', disabled=False, size=(18, 0))],
         ]
         column2 = [
             [sg.Input(key='-KEY-MESSAGE-', expand_x=True)],
@@ -179,13 +178,18 @@ class Program:
                 elif event == 'login_complete':
                     thread_login.join()
                     main_window['-BUTTON-GET-POST-'].update(disabled=False)
+                    # main_window['-IMPORT-TEXT-'].update(disabled=False)
+                    # main_window['-CLEAN-ALL-'].update(disabled=False)
                 
                 # import text file
                 elif event == '-IMPORT-TEXT-':
                     path = sg.popup_get_file('', no_window=True, initial_folder=f'C:\\Users\\{os.getlogin()}\\Documents')
                     if path != '':
-                        with open(path, 'rt', encoding='utf-8') as file:
-                            main_window['-TEXT-TO-WRITE-'].update(file.read())
+                        thread_import = threading.Thread(target=import_text, args=(main_window, path), daemon=True)
+                        thread_import.run()
+                elif event == 'import_text_complete':
+                    pass
+                    # thread_import.join()
                 elif event == '-CLEAN-ALL-':
                     main_window['-TEXT-TO-WRITE-'].update('')
 
@@ -215,7 +219,7 @@ class Program:
                                                         values['-KEY-MESSAGE-'],
                                                         values['-TEXT-TO-WRITE-'],
                                                         posts_list.index(values['-COMBO-POSTS-']),
-                                                        int(values['-SPIN-WAIT-'] * 60)),
+                                                        int(values['-SPIN-WAIT-'])),
                                                         daemon=True)
                     thread_bot.start()
                     main_window['-START-BOT-'].update(disabled=True)
