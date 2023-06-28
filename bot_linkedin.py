@@ -8,6 +8,17 @@ import os
 import pickle
 from cryptography.fernet import Fernet
 
+# Find path
+def find_data_file(filename):
+    if getattr(sys, "frozen", False):
+        # The application is frozen
+        datadir = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store your data files:
+        datadir = os.path.dirname(__file__)
+    return os.path.join(datadir, filename)
+
 class Program:
     def __init__(self, dev_mode: bool = False) -> None:
         sg.theme('Reddit')
@@ -67,7 +78,7 @@ class Program:
         return sg.Window('Bot Linkedin', layout, size=(1200, 600), resizable=True, element_justification='center', finalize=True)
 
     def main(self, nobrowser) -> None:
-        data_path = os.path.join(os.path.dirname(__file__), 'data.pkl')
+        data_path = find_data_file('data.pkl')
         if not os.path.exists(data_path):
             initial_window, main_window = self.make_win1(), None
         else:

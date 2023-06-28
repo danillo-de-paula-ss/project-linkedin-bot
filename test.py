@@ -42,3 +42,17 @@ print(any(map(lambda reply: reply.split('\n')[0].split('www.')[0] in text1, text
 # print(token)
 # print(Fernet(key).decrypt(token).decode())
 # print(key.decode())
+
+t1 = '''👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com
+
+✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html 
+
+☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
+
+t2 = '''👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com
+
+✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html 
+
+☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
+
+print(t1 == t2)

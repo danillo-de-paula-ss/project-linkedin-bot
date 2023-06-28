@@ -8,11 +8,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException, WebDriverException
 from selenium.webdriver.support import expected_conditions
 from time import sleep
+from typing import Any
 import PySimpleGUI as sg
+import pyperclip as pc
 import threading
 import sys
-from typing import Any
-import pyperclip as pc
 import random
 
 def import_text(window: sg.Window, path: str):
@@ -210,7 +210,7 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
         # //div[@class="scaffold-finite-scroll__content"]/div[5]/div/div[4]/div/div/div[6]/div[3]/div[3]/div/article/div[3]/div/div/span/div/span
         # print(comments_text)
 
-        length = len(list(filter(lambda text: text[:len(key_message)].lower() == key_message.lower(), comments_text)))
+        length = len(list(filter(lambda text: key_message.lower() in text.lower(), comments_text)))
         window['-OUT-'].update(f'{length} comentário{"s" if length > 1 else ""}.\n', text_color_for_value='green', append=True)
 
         # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[2]/div/div[3]/button
@@ -233,7 +233,7 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
             # detect if link has been shared
             # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[1]/article[3 ou 4]/div[3]/div/div/span/div/span
             replies = post.find_elements(By.XPATH, f'./div/div[4]/div/div/div[{comment_index}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[1]/article/div[3]/div/div/span/div/span')
-            replies_text = [reply.text.split('\n')[0] for reply in replies]
+            replies_text = [reply.get_attribute('innerText').replace('\xa0', ' ') for reply in replies]
             
             # stop bot if attribute do_run is False
             if not getattr(thread, 'do_run', True):
@@ -241,8 +241,8 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
                 break
 
             # detect key message in comments
-            key_found = text[:len(key_message)].lower() == key_message.lower()
-            reply_found = any(map(lambda reply: reply.split('\n')[0].split('www.')[0] in text_to_write, replies_text))
+            key_found = key_message.lower() in text.lower()
+            reply_found = any(map(lambda reply: reply == text_to_write, replies_text))
             if key_found and not reply_found:
                 button_y = response_button.location['y']
                 while True:
