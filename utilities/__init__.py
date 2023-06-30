@@ -5,7 +5,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException, WebDriverException, SessionNotCreatedException
 from selenium.webdriver.support import expected_conditions
 from time import sleep
 from typing import Any
@@ -16,41 +16,55 @@ import sys
 import random
 
 def import_text(window: sg.Window, path: str):
-    with open(path, 'rt', encoding='utf-8') as file:
-        window['-TEXT-TO-WRITE-'].update(file.read())
-    window.write_event_value('import_text_complete', '')
-
-def avoid_runtime_error(window: sg.Window, key: Any, value: Any, *, write_event: bool, message: str = '', text_color: str = 'black'):
     while True:
         try:
-            window['-OUT-'].update(message, text_color_for_value=text_color, append=True)
+            with open(path, 'rt', encoding='utf-8') as file:
+                text = file.read()
+            window.write_event_value('import_text_complete', text)
+            break
+        except RuntimeError:
+            sleep(1)
+
+def avoid_runtime_error(window:sg.Window, message:str = '', text_color:str = 'black', *, write_event:bool = False, key:Any = None, value:Any = None):
+    while True:
+        try:
+            if message != '':
+                window['-OUT-'].update(message, text_color_for_value=text_color, append=True)
             if write_event:
                 window.write_event_value(key, value)
             break
         except RuntimeError:
-            sleep(5)
+            sleep(random.choice([1, 2]))
 
 def start_driver2(window: sg.Window):
-    thread = threading.current_thread()
-    window['-OUT-'].update('Iniciando o navegador... ', append=True)
-    driver, wait = start_driver()
-    if getattr(thread, 'close_driver', False):
-        driver.quit()
-        sys.exit()
-    avoid_runtime_error(window, 'driver_started', (driver, wait), write_event=True, message='OK!\n', text_color='green')
-    # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
-    # window.write_event_value('driver_started', (driver, wait))
+    while True:
+        thread = threading.current_thread()
+        avoid_runtime_error(window, 'Iniciando o navegador... ')
+        # window['-OUT-'].update('Iniciando o navegador... ', append=True)
+        try:
+            driver, wait = start_driver()
+        except SessionNotCreatedException:
+            avoid_runtime_error(window, 'Erro ao iniciar o navegador!\n', text_color='red')
+            continue
+        if getattr(thread, 'close_driver', False):
+            driver.quit()
+            sys.exit()
+        avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='driver_started', value=(driver, wait))
+        # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+        # window.write_event_value('driver_started', (driver, wait))
+        break
 
 def open_linkedin(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
     # open Linkedin
-    window['-OUT-'].update('Acessando o site do Linkedin... ', append=True)
+    avoid_runtime_error(window, 'Acessando o site do Linkedin... ')
+    # window['-OUT-'].update('Acessando o site do Linkedin... ', append=True)
     while True:
         try:
             driver.get('https://www.linkedin.com/')
             break
         except WebDriverException:
             pass
-    avoid_runtime_error(window, 'linkedin_is_open', '', write_event=True, message='OK!\n', text_color='green')
+    avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='linkedin_is_open', value='')
 
 def check_login_page(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
     # click on signin or reload page
@@ -58,9 +72,11 @@ def check_login_page(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
         sleep(5)
         try:
             button_login: WebElement = driver.find_element(By.XPATH, '//button[@class="authwall-join-form__form-toggle--bottom form-toggle"]')
-            window['-OUT-'].update('Clicando em "Entrar"... ', append=True)
+            avoid_runtime_error(window, 'Clicando em "Entrar"... ')
+            # window['-OUT-'].update('Clicando em "Entrar"... ', append=True)
             button_login.click()
-            window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+            avoid_runtime_error(window, 'OK!\n', 'green')
+            # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
             break
         except NoSuchElementException:
             sleep(5)
@@ -69,13 +85,17 @@ def check_login_page(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
                 break
             except NoSuchElementException:
                 pass
-            window['-OUT-'].update('Recarregando a página... ', append=True)
+            avoid_runtime_error(window, 'Recarregando a página... ')
+            # window['-OUT-'].update('Recarregando a página... ', append=True)
             driver.execute_script("location.reload()")
-            window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
-    window.write_event_value('login_page_is_open', '')
+            avoid_runtime_error(window, 'OK!\n', 'green')
+            # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+    avoid_runtime_error(window, '', write_event=True, key='login_page_is_open', value='')
+    # window.write_event_value('login_page_is_open', '')
 
 def login(window: sg.Window, driver: WebDriver, wait: WebDriverWait, username: str, password: str):
-    window['-OUT-'].update('Logando no site... ', append=True)
+    avoid_runtime_error(window, 'Logando no site... ')
+    # window['-OUT-'].update('Logando no site... ', append=True)
     username_field: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//input[@autocomplete="username"]')))
     username_field.send_keys(username)
     sleep(1)
@@ -83,10 +103,11 @@ def login(window: sg.Window, driver: WebDriver, wait: WebDriverWait, username: s
     password_field.send_keys(password)
     sleep(1)
     driver.find_element(By.XPATH, '//button[contains(text(),"Entrar")]').click()
-    avoid_runtime_error(window, 'login_complete', '', write_event=True, message='OK!\n', text_color='green')
+    avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='login_complete', value='')
 
 def get_posts(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
-    window['-OUT-'].update('Pegando quantidade de postagens... ', append=True)
+    avoid_runtime_error(window, 'Pegando quantidade de postagens... ')
+    # window['-OUT-'].update('Pegando quantidade de postagens... ', append=True)
     try:
         posts: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="scaffold-finite-scroll__content"]/div')))
         # ./div/div/div/div/div[4]/div/div/span/span
@@ -114,11 +135,13 @@ def get_posts(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
         # make values for combo element
         values_combo = [t[:30] + '[...] - ' + r[:-2] + ' - ' + c for t, r, c in zip(texts, last_releases, comments)]
 
-        window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
-        window.write_event_value('number_of_posts_found', values_combo)
+        avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='number_of_posts_found', value=values_combo)
+        # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+        # window.write_event_value('number_of_posts_found', values_combo)
     except (TimeoutException, NoSuchElementException):
-        window['-OUT-'].update('ERRO! Postagens não encontradas.\n', text_color_for_value='red', append=True)
-        window.write_event_value('number_of_posts_not_found', '')
+        avoid_runtime_error(window, 'ERRO! Postagens não encontradas.\n', 'red', write_event=True, key='number_of_posts_not_found', value='')
+        # window['-OUT-'].update('ERRO! Postagens não encontradas.\n', text_color_for_value='red', append=True)
+        # window.write_event_value('number_of_posts_not_found', '')
 
 def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', text_to_write: str = '', post_selected: int = 0, wait_time: int = 0):
     thread = threading.current_thread()
@@ -129,7 +152,8 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
     while not stop:
         # posts
         if comment_index > 0:
-            window['-OUT-'].update('Selecionando postagem... ', append=True)
+            avoid_runtime_error(window, 'Selecionando postagem... ')
+            # window['-OUT-'].update('Selecionando postagem... ', append=True)
         # //div[@class="scaffold-finite-scroll__content"]/div
         posts: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="scaffold-finite-scroll__content"]/div')))
         try:
@@ -161,25 +185,45 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
         except IndexError:
             comment_index = -1
         
-        # print(comment_index)
+        # stop bot if attribute do_run is False
+        if not getattr(thread, 'do_run', True):
+            stop = True
+            avoid_runtime_error(window, 'Operação cancelada!\n', 'red', write_event=True, key='bot_stopped', value='')
+            # window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
+            # window.write_event_value('bot_stopped', '')
+            continue
 
         if comment_index <= 0:
             if comment_index == 0:
-                window['-OUT-'].update('Erro! Postagem não tem comentários.\n', text_color_for_value='red', append=True)
+                avoid_runtime_error(window, 'Erro! Postagem não tem comentários.\n', 'red')
+                # window['-OUT-'].update('Erro! Postagem não tem comentários.\n', text_color_for_value='red', append=True)
             elif post_found and comment_index < 0:
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
                 continue
             else:
-                window['-OUT-'].update('Erro! Postagem não encontrada.\n', text_color_for_value='red', append=True)
+                avoid_runtime_error(window, 'Erro! Postagem não encontrada.\n', 'red')
+                # window['-OUT-'].update('Erro! Postagem não encontrada.\n', text_color_for_value='red', append=True)
             stop = True
-            window.write_event_value('bot_stopped', '')
+            avoid_runtime_error(window, write_event=True, key='bot_stopped', value='')
+            # window.write_event_value('bot_stopped', '')
             continue
             
-        window['-OUT-'].update(f'{post_selected + 1}° postagem selecionada.\n', text_color_for_value='green', append=True)
-        sleep(2)
+        avoid_runtime_error(window, f'{post_selected + 1}° postagem selecionada.\n', 'green')
+        # window['-OUT-'].update(f'{post_selected + 1}° postagem selecionada.\n', text_color_for_value='green', append=True)
+        sleep(1)
 
         # click on the load more messages button
-        window['-OUT-'].update('Carregando mais mensagens... ', append=True)
+        avoid_runtime_error(window, 'Carregando mais mensagens... ')
+        # window['-OUT-'].update('Carregando mais mensagens... ', append=True)
+
+        # stop bot if attribute do_run is False
+        if not getattr(thread, 'do_run', True):
+            stop = True
+            avoid_runtime_error(window, 'Operação cancelada!\n', 'red', write_event=True, key='bot_stopped', value='')
+            # window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
+            # window.write_event_value('bot_stopped', '')
+            continue
+
         while True:
             try:
                 # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div[2]/button
@@ -191,17 +235,20 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
                 break
             except ElementClickInterceptedException:
                 action_chains.move_to_element_with_offset(button, 0, -300)
-        window['-OUT-'].update(f'OK!\n', text_color_for_value='green', append=True)
-        sleep(2)
+        avoid_runtime_error(window, 'OK!\n', 'green')
+        # window['-OUT-'].update(f'OK!\n', text_color_for_value='green', append=True)
+        sleep(1)
 
         # main bot
-        window['-OUT-'].update(f'Identificando comentários que possuem a palavra-chave "{key_message}"... ', append=True)
+        avoid_runtime_error(window, f'Identificando comentários que possuem a palavra-chave "{key_message}"... ')
+        # window['-OUT-'].update(f'Identificando comentários que possuem a palavra-chave "{key_message}"... ', append=True)
 
         # stop bot if attribute do_run is False
         if not getattr(thread, 'do_run', True):
             stop = True
-            window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
-            window.write_event_value('bot_stopped', '')
+            avoid_runtime_error(window, 'Operação cancelada!\n', 'red', write_event=True, key='bot_stopped', value='')
+            # window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
+            # window.write_event_value('bot_stopped', '')
             continue
 
         # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[3]/div/div/span/div/span
@@ -211,7 +258,8 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
         # print(comments_text)
 
         length = len(list(filter(lambda text: key_message.lower() in text.lower(), comments_text)))
-        window['-OUT-'].update(f'{length} comentário{"s" if length > 1 else ""}.\n', text_color_for_value='green', append=True)
+        avoid_runtime_error(window, f'{length} comentário{"s" if length > 1 else ""}.\n', 'green')
+        # window['-OUT-'].update(f'{length} comentário{"s" if length > 1 else ""}.\n', text_color_for_value='green', append=True)
 
         # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[2]/div/div[3]/button
         response_buttons = post.find_elements(By.XPATH, f'./div/div[4]/div/div/div[{comment_index}]/div[3]/div[3]/div/article/div[4]/div[2]/div/div[3]/button')
@@ -254,7 +302,14 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
                     except ElementClickInterceptedException:
                         y = random.choice([400, -400])
                         driver.execute_script(f"window.scrollTo(0, {button_y - y})")
-                window['-OUT-'].update('Respondendo comentário... ', append=True)
+                avoid_runtime_error(window, 'Respondendo comentário... ')
+                # window['-OUT-'].update('Respondendo comentário... ', append=True)
+
+                # stop bot if attribute do_run is False
+                if not getattr(thread, 'do_run', True):
+                    stop = True
+                    break
+
                 # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[3 ou 4]/div[2]/form/div/div/div/div/div/div/div/div/p
                 sleep(2)
                 field = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{comment_index}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[{len(replies) + 1}]/div[2]/form/div/div/div/div/div/div/div/div/p')
@@ -262,22 +317,43 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
                 pc.copy(text_to_write)
                 sleep(1)
                 field.send_keys(Keys().CONTROL, 'v')
+
+                # stop bot if attribute do_run is False
+                if not getattr(thread, 'do_run', True):
+                    stop = True
+                    break
+
                 # ./div/div[4]/div/div/div[5 ou 6]/div[3]/div[3]/div/article[1 ou 2]/div[4]/div[4]/div[3 ou 4]/div[2]/form/div[2]/button
                 sleep(2)
                 button = post.find_element(By.XPATH, f'./div/div[4]/div/div/div[{comment_index}]/div[3]/div[3]/div/article[{k}]/div[4]/div[4]/div[{len(replies) + 1}]/div[2]/form/div[2]/button')
+
+                # stop bot if attribute do_run is False
+                if not getattr(thread, 'do_run', True):
+                    stop = True
+                    break
+
                 button.click()
-                window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+                avoid_runtime_error(window, 'OK!\n', 'green')
+                # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
                 sleep(2)
             elif key_found and reply_found:
-                window['-OUT-'].update('Comentário já respondido.\n', append=True)
+                # stop bot if attribute do_run is False
+                if not getattr(thread, 'do_run', True):
+                    stop = True
+                    break
+                avoid_runtime_error(window, 'Comentário já respondido.\n')
+                # window['-OUT-'].update('Comentário já respondido.\n', append=True)
+
         
         # stop bot
         if stop:
-            window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
-            window.write_event_value('bot_stopped', '')
+            avoid_runtime_error(window, 'Operação cancelada!\n', 'red', write_event=True, key='bot_stopped', value='')
+            # window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
+            # window.write_event_value('bot_stopped', '')
             continue
         
-        window['-OUT-'].update(f'Esperando {wait_time} minuto{"s" if wait_time > 1 else ""}... ', append=True)
+        avoid_runtime_error(window, f'Esperando {wait_time} minuto{"s" if wait_time > 1 else ""}... ')
+        # window['-OUT-'].update(f'Esperando {wait_time} minuto{"s" if wait_time > 1 else ""}... ', append=True)
         for _ in range(wait_time * 60):
             if not getattr(thread, 'do_run', True):
                 stop = True
@@ -287,16 +363,20 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
         
         # stop bot
         if stop:
-            window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
-            window.write_event_value('bot_stopped', '')
+            avoid_runtime_error(window, 'Operação cancelada!\n', 'red', write_event=True, key='bot_stopped', value='')
+            # window['-OUT-'].update('Operação cancelada!\n', text_color_for_value='red', append=True)
+            # window.write_event_value('bot_stopped', '')
             continue
         else:
-            window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
-            window['-OUT-'].update('Recarregando a página... ', append=True)
+            avoid_runtime_error(window, 'OK!\n', 'green')
+            # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+            avoid_runtime_error(window, 'Recarregando a página... ')
+            # window['-OUT-'].update('Recarregando a página... ', append=True)
             driver.execute_script("location.reload()")
             sleep(5)
             driver.execute_script("window.scrollTo(0, -document.body.scrollHeight)")
             sleep(1)
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-            window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
+            avoid_runtime_error(window, 'OK!\n', 'green')
+            # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
             post_found = True

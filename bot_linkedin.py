@@ -50,7 +50,7 @@ class Program:
             [sg.Text('Messagem chave:')],
             [sg.Text('Texto para o bot escrever:')],
             [sg.Button('Importar texto', key='-IMPORT-TEXT-', disabled=False, size=(18, 0))],
-            [sg.Button('Limpar texto', key='-CLEAN-ALL-', disabled=False, size=(18, 0))],
+            [sg.Button('Limpar texto', key='-CLEAR-ALL-', disabled=False, size=(18, 0))],
         ]
         column2 = [
             [sg.Input(key='-KEY-MESSAGE-', expand_x=True)],
@@ -58,16 +58,11 @@ class Program:
         ]
         left_frame = [
             [sg.Column(column1, expand_x=True, vertical_alignment='top'), sg.Column(column2, expand_x=True)],
-            [sg.Button('Obter postagens da página atual', expand_x=True, disabled=True, key='-BUTTON-GET-POST-')],
+            [sg.Button('Obter postagens da página atual', button_color='gray', expand_x=True, disabled=True, key='-BUTTON-GET-POST-')],
             [sg.Text('Selecionar postagem:', size=(16, 0)), sg.Combo((), expand_x=True, readonly=True, key='-COMBO-POSTS-')],
             [sg.Text('Tempo de espera em minutos para atualizar a página:', size=(40, 0)), sg.Spin(list(range(1, 60)), 1, readonly=True, size=(10, 0), key='-SPIN-WAIT-')],
-            [sg.Button('Iniciar o Bot', key='-START-BOT-', expand_x=True, disabled=True), sg.Button('Parar o Bot', key='-STOP-BOT-', expand_x=True, disabled=True)]
+            [sg.Button('Iniciar o Bot', key='-START-BOT-', button_color='gray', expand_x=True, auto_size_button=False, disabled=True), sg.Button('Parar o Bot', key='-STOP-BOT-', button_color=('white', 'gray'), expand_x=True, auto_size_button=False, disabled=True)]
         ]
-        # left_frame = [
-        #     [sg.Text('Como deve ser feito o processo de login?'), sg.Radio('manual', 'login', key='-LOGIN-PROCESSa-', enable_events=True, default=True), sg.Radio('automático', 'login', key='-LOGIN-PROCESSb-', enable_events=True, default=False, disabled=not self.dev_mode)],
-        #     # [sg.Frame('Login automático', login_frame, expand_x=True, key='-LOGIN-FRAME-')],
-        #     [sg.Frame('Configurações do Bot', settings_frame, expand_x=True, key='-SETTINGS-FRAME-')]
-        # ]
         right_frame = [
             [sg.Multiline(expand_x=True, expand_y=True, auto_refresh=True, autoscroll=True, write_only=True, disabled=True, key='-OUT-', font=('', 14, 'bold'))]
         ]
@@ -107,11 +102,11 @@ class Program:
         while True:
             window, event, values = sg.read_all_windows()
             if event == sg.WIN_CLOSED:
-                    if program_closed_fast and main_window is not None:
-                        main_window.close()
-                        thread_driver.close_driver = True
-                        thread_driver.join()
-                    break
+                if program_closed_fast and main_window is not None:
+                    main_window.close()
+                    thread_driver.close_driver = True
+                    thread_driver.join()
+                break
             # initial window
             elif window == initial_window:
                 # execution process type system
@@ -172,7 +167,7 @@ class Program:
                     if automatic_login:
                         main_window.write_event_value('start_login', '')
                     else:
-                        main_window['-BUTTON-GET-POST-'].update(disabled=False)
+                        main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
                         main_window['-OUT-'].update('Por favor, faça login e vá para a página de postagens. Em seguida, clique em "Obter postagens da página atual".\n', text_color_for_value='red', append=True)
                 
                 # automatic login system - not complete
@@ -188,9 +183,8 @@ class Program:
                     thread_login.start()
                 elif event == 'login_complete':
                     thread_login.join()
-                    main_window['-BUTTON-GET-POST-'].update(disabled=False)
-                    # main_window['-IMPORT-TEXT-'].update(disabled=False)
-                    # main_window['-CLEAN-ALL-'].update(disabled=False)
+                    main_window['-OUT-'].update('Por favor, vá para a página de postagens. Em seguida, clique em "Obter postagens da página atual".\n', text_color_for_value='red', append=True)
+                    main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
                 
                 # import text file
                 elif event == '-IMPORT-TEXT-':
@@ -199,9 +193,9 @@ class Program:
                         thread_import = threading.Thread(target=import_text, args=(main_window, path), daemon=True)
                         thread_import.run()
                 elif event == 'import_text_complete':
-                    pass
+                    main_window['-TEXT-TO-WRITE-'].update(values['import_text_complete'])
                     # thread_import.join()
-                elif event == '-CLEAN-ALL-':
+                elif event == '-CLEAR-ALL-':
                     main_window['-TEXT-TO-WRITE-'].update('')
 
                 # get posts button system
@@ -210,16 +204,16 @@ class Program:
                                                        args=(main_window, driver, wait),
                                                        daemon=True)
                     thread_get_post.start()
-                    main_window['-BUTTON-GET-POST-'].update(disabled=True)
+                    main_window['-BUTTON-GET-POST-'].update(disabled=True, button_color='gray')
                 elif event == 'number_of_posts_found':
                     thread_get_post.join()
                     posts_list = values['number_of_posts_found']
                     main_window['-COMBO-POSTS-'].update(values=values['number_of_posts_found'], set_to_index=0)
-                    main_window['-BUTTON-GET-POST-'].update(disabled=False)
-                    main_window['-START-BOT-'].update(disabled=False)
+                    main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
+                    main_window['-START-BOT-'].update(disabled=False, button_color='green')
                 elif event == 'number_of_posts_not_found':
                     thread_get_post.join()
-                    main_window['-BUTTON-GET-POST-'].update(disabled=False)
+                    main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
                 
                 # bot system
                 elif event == '-START-BOT-':
@@ -233,14 +227,16 @@ class Program:
                                                         int(values['-SPIN-WAIT-'])),
                                                         daemon=True)
                     thread_bot.start()
-                    main_window['-START-BOT-'].update(disabled=True)
-                    main_window['-STOP-BOT-'].update(disabled=False)
+                    main_window['-START-BOT-'].update(disabled=True, button_color='gray')
+                    main_window['-STOP-BOT-'].update(disabled=False, button_color=('white', 'red'))
                 elif event == '-STOP-BOT-':
                     thread_bot.do_run = False
+                    main_window['-STOP-BOT-'].update('Esperando...', button_color=('black', 'yellow'))
                 elif event == 'bot_stopped':
                     thread_bot.join()
-                    main_window['-START-BOT-'].update(disabled=False)
-                    main_window['-STOP-BOT-'].update(disabled=True)
+                    main_window['-START-BOT-'].update(disabled=False, button_color='green')
+                    main_window['-STOP-BOT-'].update('Parar o Bot', disabled=True,
+                                                     button_color=('white', 'gray'))
         
         if driver is not None:
             main_window.close()
