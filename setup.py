@@ -5,7 +5,7 @@ from cx_Freeze import setup, Executable
 path = os.path.dirname(__file__) + os.sep
 # O que deve ser incluído na pasta final
 FILES = []
-INCLUDES = ['threading', 'os', 'sys', 'time', 'argparse', 'pyperclip', 'random', 'pickle']
+INCLUDES = ['threading', 'os', 'sys', 'time', 'argparse', 'pyperclip', 'random', 'pickle', 'traceback']
 PACKAGES = ['selenium', 'PySimpleGUI', 'utilities', 'cryptography']
 EXCLUDES = []
 

@@ -22,8 +22,9 @@ def find_data_file(filename):
 class Program:
     def __init__(self, dev_mode: bool = False) -> None:
         sg.theme('Reddit')
-        self.dev_mode = not dev_mode
+        self.dev_mode = dev_mode
         self.key = b'C5S5cpuAyO_XDOHX2Rr5MnHu64Ne6Bzg_pKsk1l9zag='
+        self.new_mode = True
         my_username = 'nerdpesquisando@gmail.com'
         my_password = 'sagavazas1234'
         key_message = 'Eu quero'
@@ -41,9 +42,10 @@ class Program:
         layout = [
             [sg.Text('Como deve ser feito o processo de login?'), sg.Radio('manual', 'login', key='-LOGIN-PROCESSa-', enable_events=True, default=True), sg.Radio('automático', 'login', key='-LOGIN-PROCESSb-', enable_events=True, default=False)],
             [sg.Frame('Login automático', login_frame, expand_x=True, key='-LOGIN-FRAME-')],
+            [sg.Text('Testar novo modo do Bot?'), sg.Checkbox('sim', True, key='-NEW-', enable_events=True)],
             [sg.Button('Confirmar', key='-CONFIRM-', expand_x=True)],
         ]
-        return sg.Window('Configurações inicias', layout, size=(500, 180), resizable=False, finalize=True)
+        return sg.Window('Configurações inicias', layout, size=(500, 210), resizable=False, finalize=True)
 
     def make_win2(self) -> sg.Window:
         column1 = [
@@ -56,13 +58,22 @@ class Program:
             [sg.Input(key='-KEY-MESSAGE-', expand_x=True)],
             [sg.Multiline(key='-TEXT-TO-WRITE-', size=(0, 10), expand_x=True, horizontal_scroll=True)]
         ]
-        left_frame = [
-            [sg.Column(column1, expand_x=True, vertical_alignment='top'), sg.Column(column2, expand_x=True)],
-            [sg.Button('Obter postagens da página atual', button_color='gray', expand_x=True, disabled=True, key='-BUTTON-GET-POST-')],
-            [sg.Text('Selecionar postagem:', size=(16, 0)), sg.Combo((), expand_x=True, readonly=True, key='-COMBO-POSTS-')],
-            [sg.Text('Tempo de espera em minutos para atualizar a página:', size=(40, 0)), sg.Spin(list(range(1, 60)), 1, readonly=True, size=(10, 0), key='-SPIN-WAIT-')],
-            [sg.Button('Iniciar o Bot', key='-START-BOT-', button_color='gray', expand_x=True, auto_size_button=False, disabled=True), sg.Button('Parar o Bot', key='-STOP-BOT-', button_color=('white', 'gray'), expand_x=True, auto_size_button=False, disabled=True)]
-        ]
+        if not (self.dev_mode or self.new_mode):
+            left_frame = [
+                [sg.Column(column1, expand_x=True, vertical_alignment='top'), sg.Column(column2, expand_x=True)],
+                [sg.Button('Obter postagens da página atual', button_color='gray', expand_x=True, disabled=True, key='-BUTTON-GET-POST-')],
+                [sg.Text('Selecionar postagem:', size=(16, 0)), sg.Combo((), expand_x=True, readonly=True, key='-COMBO-POSTS-')],
+                [sg.Text('Tempo de espera em minutos para atualizar a página:', size=(40, 0)), sg.Spin(list(range(1, 60)), 1, readonly=True, size=(10, 0), key='-SPIN-WAIT-')],
+                [sg.Button('Iniciar o Bot', key='-START-BOT-', button_color='gray', expand_x=True, auto_size_button=False, disabled=True), sg.Button('Parar o Bot', key='-STOP-BOT-', button_color=('white', 'gray'), expand_x=True, auto_size_button=False, disabled=True)]
+            ]
+        else:
+            left_frame = [
+                [sg.Column(column1, expand_x=True, vertical_alignment='top'), sg.Column(column2, expand_x=True)],
+                [sg.HorizontalSeparator('blue')],
+                [sg.Text('Quantidade de rolagens da página:', size=(40, 0)), sg.Spin(list(range(0, 10)), 0, readonly=True, size=(10, 0), key='-SPIN-SCROLL-')],
+                [sg.Text('Tempo de espera em minutos para atualizar a página:', size=(40, 0)), sg.Spin(list(range(1, 60)), 1, readonly=True, size=(10, 0), key='-SPIN-WAIT-')],
+                [sg.Button('Iniciar o Bot', key='-START-BOT-', button_color='gray', expand_x=True, auto_size_button=False, disabled=True), sg.Button('Parar o Bot', key='-STOP-BOT-', button_color=('white', 'gray'), expand_x=True, auto_size_button=False, disabled=True)]
+            ]
         right_frame = [
             [sg.Multiline(expand_x=True, expand_y=True, auto_refresh=True, autoscroll=True, write_only=True, disabled=True, key='-OUT-', font=('', 14, 'bold'))]
         ]
@@ -79,7 +90,9 @@ class Program:
         else:
             with open(data_path, 'rb') as file:
                 data: dict = pickle.load(file)
-                username, password_encrypted = data.values()
+                username = data['username']
+                password_encrypted = data['password']
+                self.new_mode = data.get('new_mode', False)
                 password = Fernet(self.key).decrypt(password_encrypted).decode()
             initial_window, main_window = None, self.make_win2()
             automatic_login = True
@@ -121,6 +134,8 @@ class Program:
                         initial_window[key].update(disabled=False)
                     for key in login_frame_text_keys:
                         initial_window[key].update(text_color='black')
+                elif event == '-NEW-':
+                    self.new_mode = values['-NEW-']
                 elif event == '-CONFIRM-':
                     if values['-LOGIN-PROCESSa-']:
                         main_window = self.make_win2()
@@ -138,7 +153,8 @@ class Program:
                             password_encrypted = Fernet(self.key).encrypt(password.encode())
                             with open(data_path, 'wb') as file:
                                 file.write(pickle.dumps({'username': username,
-                                                         'password': password_encrypted.decode()}))
+                                                         'password': password_encrypted.decode(),
+                                                         'new_mode': values['-NEW-']}))
                             main_window = self.make_win2()
                             initial_window.close()
                             automatic_login = True
@@ -149,7 +165,6 @@ class Program:
                             program_closed_fast = True
                         else:
                             initial_window['-NOTIFICATION-'].update('Os campos usuário e senha estão vazios.')
-
             # main window
             elif window == main_window:
                 # start browser
@@ -167,8 +182,12 @@ class Program:
                     if automatic_login:
                         main_window.write_event_value('start_login', '')
                     else:
-                        main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
-                        main_window['-OUT-'].update('Por favor, faça login e vá para a página de postagens. Em seguida, clique em "Obter postagens da página atual".\n', text_color_for_value='red', append=True)
+                        if not (self.dev_mode or self.new_mode):
+                            main_window['-OUT-'].update('Por favor, faça login e vá para a página de postagens. Em seguida, clique em "Obter postagens da página atual".\n', text_color_for_value='red', append=True)
+                            main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
+                        else:
+                            main_window['-OUT-'].update('Por favor, faça login e vá para a página de postagens.\n', text_color_for_value='red', append=True)
+                            main_window['-START-BOT-'].update(disabled=False, button_color='green')
                 
                 # automatic login system - not complete
                 elif event == 'start_login':
@@ -183,8 +202,12 @@ class Program:
                     thread_login.start()
                 elif event == 'login_complete':
                     thread_login.join()
-                    main_window['-OUT-'].update('Por favor, vá para a página de postagens. Em seguida, clique em "Obter postagens da página atual".\n', text_color_for_value='red', append=True)
-                    main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
+                    if not (self.dev_mode or self.new_mode):
+                        main_window['-OUT-'].update('Por favor, vá para a página de postagens. Em seguida, clique em "Obter postagens da página atual".\n', text_color_for_value='red', append=True)
+                        main_window['-BUTTON-GET-POST-'].update(disabled=False, button_color='blue')
+                    else:
+                        main_window['-OUT-'].update('Por favor, vá para a página de postagens.\n', text_color_for_value='red', append=True)
+                        main_window['-START-BOT-'].update(disabled=False, button_color='green')
                 
                 # import text file
                 elif event == '-IMPORT-TEXT-':
@@ -217,13 +240,15 @@ class Program:
                 
                 # bot system
                 elif event == '-START-BOT-':
-                    thread_bot = threading.Thread(target=start_bot,
+                    bot_func = start_bot if not (self.dev_mode or self.new_mode) else start_bot2
+                    posts_or_scrolls = posts_list.index(values['-COMBO-POSTS-']) if not (self.dev_mode or self.new_mode) else int(values['-SPIN-SCROLL-'])
+                    thread_bot = threading.Thread(target=bot_func,
                                                   args=(main_window,
                                                         driver,
                                                         wait,
                                                         values['-KEY-MESSAGE-'],
                                                         values['-TEXT-TO-WRITE-'],
-                                                        posts_list.index(values['-COMBO-POSTS-']),
+                                                        posts_or_scrolls,
                                                         int(values['-SPIN-WAIT-'])),
                                                         daemon=True)
                     thread_bot.start()
@@ -244,7 +269,7 @@ class Program:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-nb', '--nobrowser', action='store_true', help='Does not open the browser')
+    parser.add_argument('-nb', '--nobrowser', action='store_true', help='Not open the browser')
     parser.add_argument('-d', '--dev', action='store_true', help='Enable developer mode')
     args = parser.parse_args()
     program = Program(args.dev)

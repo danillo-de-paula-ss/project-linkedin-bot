@@ -1,0 +1,2 @@
+class BotStopped(Exception):
+    pass

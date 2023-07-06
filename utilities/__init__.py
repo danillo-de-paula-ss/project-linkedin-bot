@@ -1,4 +1,5 @@
-from utilities.driver_settings import start_driver
+from .driver_settings import start_driver
+from .exceptions import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -14,6 +15,7 @@ import pyperclip as pc
 import threading
 import sys
 import random
+import traceback
 
 def import_text(window: sg.Window, path: str):
     while True:
@@ -72,7 +74,7 @@ def check_login_page(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
         sleep(5)
         try:
             button_login: WebElement = driver.find_element(By.XPATH, '//button[@class="authwall-join-form__form-toggle--bottom form-toggle"]')
-            avoid_runtime_error(window, 'Clicando em "Entrar"... ')
+            avoid_runtime_error(window, 'Clicando em "Entre"... ')
             # window['-OUT-'].update('Clicando em "Entrar"... ', append=True)
             button_login.click()
             avoid_runtime_error(window, 'OK!\n', 'green')
@@ -380,3 +382,189 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
             avoid_runtime_error(window, 'OK!\n', 'green')
             # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
             post_found = True
+
+def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_message:str = '', text_to_write:str = '', page_scrolls:int = 0, wait_time:int = 0):
+    first = True
+    is_other_tab = False
+    while True:
+        try:
+            if first:
+                thread = threading.current_thread()
+                action_chains = ActionChains(driver)
+                try:
+                    avoid_runtime_error(window, 'Clicando em "Atividades"... ')
+                    tab_buttons: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//li[@class="org-page-navigation__item"]')))
+                    tab_buttons[-1].click()
+                    
+                    # stop bot
+                    if not getattr(thread, 'do_run', True):
+                        raise BotStopped
+                    
+                    avoid_runtime_error(window, 'OK!\n', 'green')
+                    avoid_runtime_error(window, 'Filtrando comentários... ')
+                    filter_button: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//button[@role="checkbox" and contains(@aria-label, "Coment")]')))
+                    
+                    # stop bot
+                    if not getattr(thread, 'do_run', True):
+                        raise BotStopped
+                    
+                    if filter_button.get_attribute('aria-checked') == 'false':
+                        filter_button.click()
+                except TimeoutException:
+                    pass
+                
+                # stop bot
+                if not getattr(thread, 'do_run', True):
+                    raise BotStopped
+                
+                avoid_runtime_error(window, 'OK!\n', 'green')
+            else:
+                avoid_runtime_error(window, 'Recarregando a página... ')
+                driver.execute_script("location.reload()")
+                
+                # stop bot
+                if not getattr(thread, 'do_run', True):
+                    raise BotStopped
+                
+                sleep(3)
+                avoid_runtime_error(window, 'OK!\n', 'green')
+
+            sleep(5)
+            for _ in range(page_scrolls):
+                avoid_runtime_error(window, 'Rolando a página para baixo... ')
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+
+                # stop bot
+                if not getattr(thread, 'do_run', True):
+                    raise BotStopped
+                
+                sleep(3)
+                avoid_runtime_error(window, 'OK!\n', 'green')
+
+            avoid_runtime_error(window, 'Encontrando comentários... ')
+            comments: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="scaffold-finite-scroll__content"]/div/div/article/div[2]')))
+
+            # stop bot
+            if not getattr(thread, 'do_run', True):
+                raise BotStopped
+            
+            comments_text = [comment.find_element(By.XPATH, './button/div/span').text for comment in comments]
+            length_comments = len(comments)
+            avoid_runtime_error(window, f'{length_comments} encontrado{"s" if len(comments) != 1 else ""}.\n', 'green')
+            initial_tab = driver.current_window_handle
+            for k, comment, comment_text in zip(range(1, len(comments) + 1), comments, comments_text):
+                is_other_tab = False
+                sleep(2)
+                avoid_runtime_error(window, f'{k}º comentário.\n')
+                avoid_runtime_error(window, 'Identificando se o comentário contém a palavra chave... ')
+
+                # stop bot
+                if not getattr(thread, 'do_run', True):
+                    raise BotStopped
+
+                if key_message.lower() in comment_text.lower():
+                    avoid_runtime_error(window, 'OK!\n', 'green')
+                    avoid_runtime_error(window, 'Clicando em "Responder"... ')
+                    
+                    # stop bot
+                    if not getattr(thread, 'do_run', True):
+                        raise BotStopped
+                    
+                    button = comment.find_element(By.XPATH, './div/div/button')
+                    button_y = button.location['y']
+                    i = 1
+                    while True:
+                        try:
+                            button.click()
+                            break
+                        except ElementClickInterceptedException:
+                            driver.execute_script(f"window.scrollTo(0, {button_y - i * 100})")
+                            sleep(1)
+                            i += 1
+                    avoid_runtime_error(window, 'OK!\n', 'green')
+                    avoid_runtime_error(window, 'Trocando de aba... ')
+                    tabs = driver.window_handles
+
+                    # stop bot
+                    if not getattr(thread, 'do_run', True):
+                        raise BotStopped
+
+                    for tab in tabs:
+                        sleep(1)
+
+                        # stop bot
+                        if not getattr(thread, 'do_run', True):
+                            raise BotStopped
+
+                        if tab not in initial_tab:
+                            is_other_tab = True
+                            driver.switch_to.window(tab)
+                            sleep(10)
+
+                            # stop bot
+                            if not getattr(thread, 'do_run', True):
+                                raise BotStopped
+
+                            avoid_runtime_error(window, 'OK!\n', 'green')
+                            data_id = driver.current_url.split('%2C')[-1].split('%')[0]
+                            avoid_runtime_error(window, 'Identificando se o comentário já foi respondido... ')
+                            try:
+                                replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span')
+                            except NoSuchElementException:
+                                replies = []
+                            replies_text = [reply.get_attribute('innerText').replace('\xa0', ' ') \
+                                            for reply in replies]
+                            reply_found = any(map(lambda reply: reply == text_to_write, replies_text))
+
+                            # stop bot
+                            if not getattr(thread, 'do_run', True):
+                                raise BotStopped
+
+                            if not reply_found:
+                                avoid_runtime_error(window, 'Comentário não foi respondido ainda!\n', 'red')
+                                avoid_runtime_error(window, 'Respondendo comentário... ')
+                                pc.copy(text_to_write)
+
+                                # stop bot
+                                if not getattr(thread, 'do_run', True):
+                                    raise BotStopped
+
+                                sleep(1)
+                                driver.find_element(By.XPATH, '//div[contains(@data-placeholder, "Responder em nome de")]/p').send_keys(Keys().CONTROL, 'v')
+                                
+                                # stop bot
+                                if not getattr(thread, 'do_run', True):
+                                    raise BotStopped
+                                
+                                sleep(2)
+                                driver.find_element(By.XPATH, '//form[@class="comments-comment-box__form"]/div/button[contains(@aria-label, "Responder ao comentário de")]').click()
+                                avoid_runtime_error(window, 'OK!\n', 'green')
+                            else:
+                                avoid_runtime_error(window, 'Comentário já foi respondido!\n', 'green')
+                            sleep(2)
+                            driver.close()
+                            driver.switch_to.window(initial_tab)
+                else:
+                    avoid_runtime_error(window, 'Não contém!\n', 'red')
+            avoid_runtime_error(window, f'Esperando {wait_time} minuto{"s" if wait_time > 1 else ""}... ')
+            for _ in range(wait_time * 60):
+                if not getattr(thread, 'do_run', True):
+                    raise BotStopped
+                else:
+                    sleep(1)
+            avoid_runtime_error(window, 'OK!\n', 'green')
+        except Exception as err:
+            if isinstance(err, BotStopped):
+                avoid_runtime_error(window, 'Bot encerrado!\n', 'red', write_event=True, key='bot_stopped', value='')
+                if is_other_tab:
+                    driver.close()
+                    driver.switch_to.window(initial_tab)
+            else:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
+                tb_txt = "".join(tb.format_exception_only())
+                print(tb_txt)
+                avoid_runtime_error(window, 'Erro encontrado! Bot encerrado!\n', 'red', write_event=True, key='bot_stopped', value='')
+            break
+        else:
+            first = False
