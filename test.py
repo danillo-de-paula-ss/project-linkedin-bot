@@ -60,13 +60,51 @@
 # with open(f'C:\\Users\\{os.getlogin()}\\Documents\\mensagem_para_envio.txt', 'rt', encoding='utf-8') as file:
 #     print(file.read())
 
-from utilities.exceptions import *
+# from utilities.exceptions import *
 
-try:
-    raise BotStopped
-except Exception as err:
-    print(err.args)
-    if isinstance(err, BotStopped):
-        print('sim')
-    else:
-        print('não')
+# try:
+#     raise BotStopped
+# except Exception as err:
+#     print(err.args)
+#     if isinstance(err, BotStopped):
+#         print('sim')
+#     else:
+#         print('não')
+
+# import emoji
+
+# s = '😀'
+# print(s.encode('unicode-escape').decode('ASCII'))
+
+# print(emoji.is_emoji('❤'))
+
+# text1 = '''👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com
+
+# ✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html 
+
+# ☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
+
+# text2 = '''👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com
+
+# ✅\xa0Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html 
+
+# ☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
+
+text1 = ['👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com\n\n✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html \n\n☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'][0]
+
+text2 = ['👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com\n\n✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html\n\n☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'][0]
+
+text1 = '\n'.join([t.strip() for t in text1.splitlines()])
+text2 = '\n'.join([t.strip() for t in text2.splitlines()])
+
+print(text1 == text2)
+
+def check_text(text1:str, text2:str, percentage:int) -> bool:
+    count = 0
+    for char1, char2 in zip(text1, text2):
+        if char1 == char2:
+            count += 1
+    # print(count, '>=', len(text1) * (percentage / 100))
+    return count >= len(text1) * (percentage / 100)
+
+print(check_text(text1, text2, 50))

@@ -22,10 +22,18 @@ def import_text(window: sg.Window, path: str):
         try:
             with open(path, 'rt', encoding='utf-8') as file:
                 text = file.read()
+            text = '\n'.join([t.strip() for t in text.splitlines()])
             window.write_event_value('import_text_complete', text)
             break
         except RuntimeError:
             sleep(1)
+
+def check_text(text1:str, text2:str, percentage:int) -> bool:
+    count = 0
+    for char1, char2 in zip(text1, text2):
+        if char1 == char2:
+            count += 1
+    return count >= len(text1) * (percentage / 100)
 
 def avoid_runtime_error(window:sg.Window, message:str = '', text_color:str = 'black', *, write_event:bool = False, key:Any = None, value:Any = None):
     while True:
@@ -428,6 +436,7 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 
                 sleep(3)
                 avoid_runtime_error(window, 'OK!\n', 'green')
+                driver.execute_script("window.scrollTo(0, -document.body.scrollHeight)")
 
             sleep(5)
             for _ in range(page_scrolls):
@@ -509,12 +518,12 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                             data_id = driver.current_url.split('%2C')[-1].split('%')[0]
                             avoid_runtime_error(window, 'Identificando se o comentário já foi respondido... ')
                             try:
-                                replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span')
+                                replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span/span')
                             except NoSuchElementException:
                                 replies = []
-                            replies_text = [reply.get_attribute('innerText').replace('\xa0', ' ') \
-                                            for reply in replies]
-                            reply_found = any(map(lambda reply: reply == text_to_write, replies_text))
+                            replies_text = [reply.get_attribute('innerText') for reply in replies]
+                            # reply_found = any(map(lambda reply: reply == text_to_write, replies_text))
+                            reply_found = any(map(lambda reply: check_text(text_to_write, reply, 90), replies_text))
 
                             # stop bot
                             if not getattr(thread, 'do_run', True):
@@ -523,14 +532,21 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                             if not reply_found:
                                 avoid_runtime_error(window, 'Comentário não foi respondido ainda!\n', 'red')
                                 avoid_runtime_error(window, 'Respondendo comentário... ')
-                                pc.copy(text_to_write)
+                                # pc.copy(text_to_write)
 
                                 # stop bot
                                 if not getattr(thread, 'do_run', True):
                                     raise BotStopped
 
                                 sleep(1)
-                                driver.find_element(By.XPATH, '//div[contains(@data-placeholder, "Responder em nome de")]/p').send_keys(Keys().CONTROL, 'v')
+                                # driver.find_element(By.XPATH, '//div[contains(@data-placeholder, "Responder em nome de")]/p').send_keys(Keys().CONTROL, 'v')
+                                texts = text_to_write.splitlines()
+                                for k in range(len(texts)):
+                                    fields = driver.find_elements(By.XPATH, '//div[contains(@data-placeholder, "Responder em nome de")]/p')
+                                    driver.execute_script(f"arguments[0].innerHTML = '{texts[k]}'",
+                                                          fields[k])
+                                    fields[k].send_keys(Keys.END + Keys.ARROW_DOWN * 10 + \
+                                                        ('\n.' if k + 1 < len(texts) else ''))
                                 
                                 # stop bot
                                 if not getattr(thread, 'do_run', True):

@@ -92,7 +92,7 @@ class Program:
                 data: dict = pickle.load(file)
                 username = data['username']
                 password_encrypted = data['password']
-                self.new_mode = data.get('new_mode', False)
+                self.new_mode = data.get('new_mode', True)
                 password = Fernet(self.key).decrypt(password_encrypted).decode()
             initial_window, main_window = None, self.make_win2()
             automatic_login = True
