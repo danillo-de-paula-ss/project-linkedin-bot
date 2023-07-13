@@ -20,7 +20,7 @@ def find_data_file(filename):
     return os.path.join(datadir, filename)
 
 class Program:
-    def __init__(self, dev_mode: bool = False) -> None:
+    def __init__(self, dev_mode:bool = False) -> None:
         sg.theme('Reddit')
         self.dev_mode = dev_mode
         self.key = b'C5S5cpuAyO_XDOHX2Rr5MnHu64Ne6Bzg_pKsk1l9zag='
@@ -83,7 +83,7 @@ class Program:
         ]
         return sg.Window('Bot Linkedin', layout, size=(1200, 600), resizable=True, element_justification='center', finalize=True)
 
-    def main(self, nobrowser) -> None:
+    def main(self, nobrowser, debug) -> None:
         data_path = find_data_file('data.pkl')
         if not os.path.exists(data_path):
             initial_window, main_window = self.make_win1(), None
@@ -249,7 +249,9 @@ class Program:
                                                         values['-KEY-MESSAGE-'],
                                                         values['-TEXT-TO-WRITE-'],
                                                         posts_or_scrolls,
-                                                        int(values['-SPIN-WAIT-'])),
+                                                        int(values['-SPIN-WAIT-']),
+                                                        debug,
+                                                        find_data_file),
                                                         daemon=True)
                     thread_bot.start()
                     main_window['-START-BOT-'].update(disabled=True, button_color='gray')
@@ -266,11 +268,13 @@ class Program:
         if driver is not None:
             main_window.close()
             driver.quit()
+            sys.exit()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-nb', '--nobrowser', action='store_true', help='Not open the browser')
-    parser.add_argument('-d', '--dev', action='store_true', help='Enable developer mode')
+    parser.add_argument('-dv', '--dev', action='store_true', help='Enable developer mode')
+    parser.add_argument('-db', '--debug', action='store_true', help='Enable debug mode')
     args = parser.parse_args()
     program = Program(args.dev)
-    program.main(args.nobrowser)
+    program.main(args.nobrowser, True)

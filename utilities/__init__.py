@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException, WebDriverException, SessionNotCreatedException
 from selenium.webdriver.support import expected_conditions
 from time import sleep
-from typing import Any
+from typing import Any, Callable
 import PySimpleGUI as sg
 import pyperclip as pc
 import threading
@@ -153,7 +153,7 @@ def get_posts(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
         # window['-OUT-'].update('ERRO! Postagens não encontradas.\n', text_color_for_value='red', append=True)
         # window.write_event_value('number_of_posts_not_found', '')
 
-def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', text_to_write: str = '', post_selected: int = 0, wait_time: int = 0):
+def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', text_to_write: str = '', post_selected: int = 0, wait_time: int = 0, debug:bool = False, find_data_file:Callable = None):
     thread = threading.current_thread()
     action_chains = ActionChains(driver)
     post_found = False
@@ -391,9 +391,12 @@ def start_bot(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_mes
             # window['-OUT-'].update('OK!\n', text_color_for_value='green', append=True)
             post_found = True
 
-def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_message:str = '', text_to_write:str = '', page_scrolls:int = 0, wait_time:int = 0):
+def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_message:str = '', text_to_write:str = '', page_scrolls:int = 0, wait_time:int = 0, debug:bool = False, find_data_file:Callable = None):
     first = True
     is_other_tab = False
+    if debug:
+        with open(find_data_file('replies.txt'), 'wt', encoding='utf-8') as file:
+            pass
     while True:
         try:
             if first:
@@ -523,7 +526,12 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                                 replies = []
                             replies_text = [reply.get_attribute('innerText') for reply in replies]
                             # reply_found = any(map(lambda reply: reply == text_to_write, replies_text))
-                            reply_found = any(map(lambda reply: check_text(text_to_write, reply, 90), replies_text))
+                            reply_found = any(map(lambda reply: check_text(text_to_write, reply, 80), replies_text))
+
+                            if debug and len(replies) > 0 and not reply_found:
+                                with open(find_data_file('replies.txt'), 'at', encoding='utf-8') as file:
+                                    for k, text in enumerate(replies_text):
+                                        file.write(f'{k + 1}° {text}\n')
 
                             # stop bot
                             if not getattr(thread, 'do_run', True):

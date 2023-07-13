@@ -108,3 +108,10 @@ def check_text(text1:str, text2:str, percentage:int) -> bool:
     return count >= len(text1) * (percentage / 100)
 
 print(check_text(text1, text2, 50))
+
+with open('t.txt', 'a', encoding='utf-8') as file:
+    file.write(f'{text1}\n')
+    file.write(f'{text2}\n')
+with open('t.txt', 'a', encoding='utf-8') as file:
+    file.write(f'{text1}\n')
+    file.write(f'{text2}\n')
