@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.remote.remote_connection import LOGGER
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,8 +23,9 @@ def start_driver():
         'profile.default_content_setting_values.automatic_downloads': 1,
     })
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager(version="114.0.5735.90").install()),
                               options=chrome_options)
+    driver.maximize_window()
     wait = WebDriverWait(driver=driver,
                          timeout=10,
                          poll_frequency=1,

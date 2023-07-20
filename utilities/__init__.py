@@ -16,6 +16,7 @@ import threading
 import sys
 import random
 import traceback
+import unicodedata
 
 def import_text(window: sg.Window, path: str):
     while True:
@@ -518,20 +519,29 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                                 raise BotStopped
 
                             avoid_runtime_error(window, 'OK!\n', 'green')
-                            data_id = driver.current_url.split('%2C')[-1].split('%')[0]
+                            data_id = driver.current_url.split('%')[-2].removeprefix('2C')
                             avoid_runtime_error(window, 'Identificando se o comentário já foi respondido... ')
-                            try:
-                                replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span/span')
-                            except NoSuchElementException:
-                                replies = []
+                            # try:
+                            replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span/span')
+                            # except NoSuchElementException:
+                            #     replies = []
                             replies_text = [reply.get_attribute('innerText') for reply in replies]
                             # reply_found = any(map(lambda reply: reply == text_to_write, replies_text))
-                            reply_found = any(map(lambda reply: check_text(text_to_write, reply, 80), replies_text))
+                            # reply_found = any(map(lambda reply: check_text(text_to_write, reply, 80), replies_text))
+                            reply_found = any(map(lambda reply: check_text(
+                                ''.join([t for t in text_to_write if t not in ' \n']),
+                                ''.join([t for t in unicodedata.normalize("NFKC", reply) if t not in ' \n']),
+                                80), replies_text))
 
-                            if debug and len(replies) > 0 and not reply_found:
+                            if debug:
                                 with open(find_data_file('replies.txt'), 'at', encoding='utf-8') as file:
-                                    for k, text in enumerate(replies_text):
-                                        file.write(f'{k + 1}° {text}\n')
+                                    file.write(f'url: {driver.current_url}\n')
+                                    file.write(f'id: {data_id}\n')
+                                    file.write(f'reply_found: {reply_found}\n')
+                                    file.write(f'text to write: {text_to_write}\n')
+                                    for k, text in enumerate(replies_text, 1):
+                                        file.write(f'{k}° reply: {text}\n')
+                                    file.write('\n')
 
                             # stop bot
                             if not getattr(thread, 'do_run', True):
@@ -588,6 +598,9 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
                 tb_txt = "".join(tb.format_exception_only())
                 print(tb_txt)
+                if is_other_tab:
+                    driver.close()
+                    driver.switch_to.window(initial_tab)
                 avoid_runtime_error(window, 'Erro encontrado! Bot encerrado!\n', 'red', write_event=True, key='bot_stopped', value='')
             break
         else:

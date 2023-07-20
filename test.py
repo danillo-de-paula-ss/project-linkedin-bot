@@ -90,12 +90,31 @@
 
 # ☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
 
-text1 = ['👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com\n\n✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html \n\n☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'][0]
+# text1 = ['👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com\n\n✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html \n\n☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'][0]
 
-text2 = ['👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com\n\n✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html\n\n☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'][0]
+# text2 = ['👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com\n\n✅ Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html\n\n☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'][0]
 
-text1 = '\n'.join([t.strip() for t in text1.splitlines()])
-text2 = '\n'.join([t.strip() for t in text2.splitlines()])
+import unicodedata
+
+text1 = '''👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui:  www.vagaseolica.com
+
+✅  Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html 
+
+☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
+
+text2 = '''👉 Para saber todas as informações sobre a vaga de emprego, acesse nosso blog aqui: www.vagaseolica.com
+
+✅\xa0Participe do nosso grupo de whatsapp e não perca mais nenhuma vaga quando for postada: 👉www.vagaseolica.com/p/whatsapp.html
+
+☑ Transforme sua vida com as vagas de emprego mais promissoras no setor de energia eólica. Saiba mais: https://www.vagaseolica.com/2023/06/seu-primeiro-emprego-na-industria.html'''
+
+print(len(text2))
+print(len(unicodedata.normalize("NFKC", text2)))
+
+# text1 = '\n'.join([t.strip() for t in text1.splitlines()])
+text1 = ''.join([t for t in text1 if t not in ' \n'])
+# text2 = '\n'.join([t.strip() for t in text2.splitlines()])
+text2 = ''.join([t for t in unicodedata.normalize("NFKC", text2) if t not in ' \n'])
 
 print(text1 == text2)
 
@@ -104,14 +123,20 @@ def check_text(text1:str, text2:str, percentage:int) -> bool:
     for char1, char2 in zip(text1, text2):
         if char1 == char2:
             count += 1
-    # print(count, '>=', len(text1) * (percentage / 100))
     return count >= len(text1) * (percentage / 100)
 
 print(check_text(text1, text2, 50))
 
-with open('t.txt', 'a', encoding='utf-8') as file:
-    file.write(f'{text1}\n')
-    file.write(f'{text2}\n')
-with open('t.txt', 'a', encoding='utf-8') as file:
-    file.write(f'{text1}\n')
-    file.write(f'{text2}\n')
+# with open('t.txt', 'a', encoding='utf-8') as file:
+#     file.write(f'{text1}\n')
+#     file.write(f'{text2}\n')
+# with open('t.txt', 'a', encoding='utf-8') as file:
+#     file.write(f'{text1}\n')
+#     file.write(f'{text2}\n')
+
+
+# https://www.linkedin.com/feed/update/urn:li:activity:7082055243542216704/?commentUrn=urn%3Ali%3Acomment%3A%28activity%3A7082055243542216704%2C7086452537276428288%29&actorCompanyId=75082800
+
+link = r'https://www.linkedin.com/feed/update/urn:li:activity:7082055243542216704/?commentUrn=urn%3Ali%3Acomment%3A%28activity%3A7082055243542216704%2C7086452537276428288%29&actorCompanyId=75082800'
+
+print(link.split('%')[-2].removeprefix('2C'))

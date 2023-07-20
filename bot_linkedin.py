@@ -95,6 +95,7 @@ class Program:
                 self.new_mode = data.get('new_mode', True)
                 password = Fernet(self.key).decrypt(password_encrypted).decode()
             initial_window, main_window = None, self.make_win2()
+            main_window.Maximize()
             automatic_login = True
 
         # start browser
@@ -140,6 +141,7 @@ class Program:
                     if values['-LOGIN-PROCESSa-']:
                         main_window = self.make_win2()
                         initial_window.close()
+                        main_window.Maximize()
                         automatic_login = False
                         thread_driver = threading.Thread(target=start_driver2,
                                                          args=(main_window,),
@@ -157,6 +159,7 @@ class Program:
                                                          'new_mode': values['-NEW-']}))
                             main_window = self.make_win2()
                             initial_window.close()
+                            main_window.Maximize()
                             automatic_login = True
                             thread_driver = threading.Thread(target=start_driver2,
                                                              args=(main_window,),
@@ -277,4 +280,4 @@ if __name__ == '__main__':
     parser.add_argument('-db', '--debug', action='store_true', help='Enable debug mode')
     args = parser.parse_args()
     program = Program(args.dev)
-    program.main(args.nobrowser, True)
+    program.main(args.nobrowser, args.debug)

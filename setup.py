@@ -5,8 +5,8 @@ from cx_Freeze import setup, Executable
 path = os.path.dirname(__file__) + os.sep
 # O que deve ser incluído na pasta final
 FILES = []
-INCLUDES = ['threading', 'os', 'sys', 'time', 'argparse', 'pyperclip', 'random', 'pickle', 'traceback']
-PACKAGES = ['webdriver_manager', 'selenium', 'PySimpleGUI', 'utilities', 'cryptography']
+INCLUDES = ['threading', 'os', 'sys', 'time', 'argparse', 'pyperclip', 'random', 'pickle', 'traceback', 'unicodedata']
+PACKAGES = ['webdriver_manager', 'selenium', 'PySimpleGUI', 'cryptography', 'pyperclip', 'utilities']
 EXCLUDES = []
 
 base = None
@@ -22,7 +22,7 @@ config = Executable(
 # Configurar o cx-freeze (detalhes do programa)
 setup(
     name='bot_linkedin',
-    version='1.0.6',
+    version='1.1.0',
     description='Bot para Linkedin',
     author='DanilloDePaulaSS',
     options={'build_exe': {'include_files': FILES,
