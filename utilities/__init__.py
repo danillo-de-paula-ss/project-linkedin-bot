@@ -405,8 +405,17 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 action_chains = ActionChains(driver)
                 try:
                     avoid_runtime_error(window, 'Clicando em "Atividades"... ')
-                    tab_buttons: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//li[@class="org-page-navigation__item"]')))
-                    tab_buttons[-1].click()
+                    activity_button: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//span[text()="Atividades"]')))
+                    button_y = activity_button.location['y']
+                    i = 1
+                    while True:
+                        try:
+                            activity_button.click()
+                            break
+                        except ElementClickInterceptedException:
+                            driver.execute_script(f"window.scrollTo(0, {button_y - i * 100})")
+                            sleep(1)
+                            i += 1
                     
                     # stop bot
                     if not getattr(thread, 'do_run', True):
@@ -421,7 +430,16 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                         raise BotStopped
                     
                     if filter_button.get_attribute('aria-checked') == 'false':
-                        filter_button.click()
+                        button_y = filter_button.location['y']
+                        i = 1
+                        while True:
+                            try:
+                                filter_button.click()
+                                break
+                            except ElementClickInterceptedException:
+                                driver.execute_script(f"window.scrollTo(0, {button_y - i * 100})")
+                                sleep(1)
+                                i += 1
                 except TimeoutException:
                     pass
                 
@@ -431,7 +449,9 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 
                 avoid_runtime_error(window, 'OK!\n', 'green')
             else:
+                driver.execute_script("window.scrollTo(0, -document.body.scrollHeight)")
                 avoid_runtime_error(window, 'Recarregando a página... ')
+                sleep(1)
                 driver.execute_script("location.reload()")
                 
                 # stop bot
@@ -440,7 +460,6 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 
                 sleep(3)
                 avoid_runtime_error(window, 'OK!\n', 'green')
-                driver.execute_script("window.scrollTo(0, -document.body.scrollHeight)")
 
             sleep(5)
             for _ in range(page_scrolls):
