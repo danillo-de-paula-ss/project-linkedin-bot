@@ -396,7 +396,9 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
     first = True
     is_other_tab = False
     if debug:
-        with open(find_data_file('replies.txt'), 'wt', encoding='utf-8') as file:
+        # with open(find_data_file('replies.txt'), 'wt', encoding='utf-8') as file:
+        #     pass
+        with open(find_data_file('errors.txt'), 'wt', encoding='utf-8') as file:
             pass
     while True:
         try:
@@ -458,7 +460,7 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 if not getattr(thread, 'do_run', True):
                     raise BotStopped
                 
-                sleep(3)
+                sleep(5)
                 avoid_runtime_error(window, 'OK!\n', 'green')
 
             sleep(5)
@@ -531,7 +533,7 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                         if tab not in initial_tab:
                             is_other_tab = True
                             driver.switch_to.window(tab)
-                            sleep(10)
+                            sleep(15)
 
                             # stop bot
                             if not getattr(thread, 'do_run', True):
@@ -552,15 +554,15 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                                 ''.join([t for t in unicodedata.normalize("NFKC", reply) if t not in ' \n']),
                                 80), replies_text))
 
-                            if debug:
-                                with open(find_data_file('replies.txt'), 'at', encoding='utf-8') as file:
-                                    file.write(f'url: {driver.current_url}\n')
-                                    file.write(f'id: {data_id}\n')
-                                    file.write(f'reply_found: {reply_found}\n')
-                                    file.write(f'text to write: {text_to_write}\n')
-                                    for k, text in enumerate(replies_text, 1):
-                                        file.write(f'{k}° reply: {text}\n')
-                                    file.write('\n')
+                            # if debug:
+                            #     with open(find_data_file('replies.txt'), 'at', encoding='utf-8') as file:
+                            #         file.write(f'url: {driver.current_url}\n')
+                            #         file.write(f'id: {data_id}\n')
+                            #         file.write(f'reply_found: {reply_found}\n')
+                            #         file.write(f'text to write: {text_to_write}\n')
+                            #         for k, text in enumerate(replies_text, 1):
+                            #             file.write(f'{k}° reply: {text}\n')
+                            #         file.write('\n')
 
                             # stop bot
                             if not getattr(thread, 'do_run', True):
@@ -617,6 +619,9 @@ def start_bot2(window:sg.Window, driver:WebDriver, wait:WebDriverWait, key_messa
                 tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
                 tb_txt = "".join(tb.format_exception_only())
                 print(tb_txt)
+                if debug:
+                    with open(find_data_file('errors.txt'), 'at', encoding='utf-8') as file:
+                        file.write(tb_txt + '\n')
                 if is_other_tab:
                     driver.close()
                     driver.switch_to.window(initial_tab)

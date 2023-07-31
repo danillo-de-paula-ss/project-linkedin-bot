@@ -22,7 +22,7 @@ config = Executable(
 # Configurar o cx-freeze (detalhes do programa)
 setup(
     name='bot_linkedin',
-    version='1.1.4',
+    version='1.1.6',
     description='Bot para Linkedin',
     author='DanilloDePaulaSS',
     options={'build_exe': {'include_files': FILES,
