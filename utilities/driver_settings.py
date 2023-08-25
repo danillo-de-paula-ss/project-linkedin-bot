@@ -23,7 +23,9 @@ def start_driver():
         'profile.default_content_setting_values.automatic_downloads': 1,
     })
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager(version="114.0.5735.90").install()),
+    # executable_path = r'chromedriver\chromedriver.exe'
+    executable_path = ChromeDriverManager().install()
+    driver = webdriver.Chrome(service=Service(executable_path),
                               options=chrome_options)
     driver.maximize_window()
     wait = WebDriverWait(driver=driver,
