@@ -1,7 +1,0 @@
-my_username = nerdpesquisando@gmail.com
-my_password = sagavazas1234
-key_message = Eu quero
-link_to_share = https://www.youtube.com/
-post_selected = 0
-wait_time = 10
-captcha_time = 60

@@ -140,3 +140,8 @@ print(check_text(text1, text2, 50))
 link = r'https://www.linkedin.com/feed/update/urn:li:activity:7082055243542216704/?commentUrn=urn%3Ali%3Acomment%3A%28activity%3A7082055243542216704%2C7086452537276428288%29&actorCompanyId=75082800'
 
 print(link.split('%')[-2].removeprefix('2C'))
+
+import datetime
+
+print(datetime.datetime.now())
+print(datetime.datetime.now().strftime('%d%m%Y%H%M%S'))

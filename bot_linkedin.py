@@ -76,11 +76,11 @@ class Program:
                 password_encrypted = data['password']
                 password = Fernet(self.key).decrypt(password_encrypted).decode()
             initial_window, main_window = None, self.make_win2()
-            main_window.Maximize()
+            main_window.maximize()
             automatic_login = True
 
         # start browser
-        thread_driver = threading.Thread(target=start_driver2, args=(main_window,), daemon=True)
+        thread_driver = threading.Thread(target=start_driver2, args=(main_window, find_data_file), daemon=True)
         if not nobrowser and main_window is not None:
             thread_driver.start()
             program_closed_fast = True
@@ -119,10 +119,10 @@ class Program:
                     if values['-LOGIN-PROCESSa-']:
                         main_window = self.make_win2()
                         initial_window.close()
-                        main_window.Maximize()
+                        main_window.maximize()
                         automatic_login = False
                         thread_driver = threading.Thread(target=start_driver2,
-                                                         args=(main_window,),
+                                                         args=(main_window, find_data_file),
                                                          daemon=True)
                         thread_driver.start()
                         program_closed_fast = True
@@ -136,10 +136,10 @@ class Program:
                                                          'password': password_encrypted.decode()}))
                             main_window = self.make_win2()
                             initial_window.close()
-                            main_window.Maximize()
+                            main_window.maximize()
                             automatic_login = True
                             thread_driver = threading.Thread(target=start_driver2,
-                                                             args=(main_window,),
+                                                             args=(main_window, find_data_file),
                                                              daemon=True)
                             thread_driver.start()
                             program_closed_fast = True

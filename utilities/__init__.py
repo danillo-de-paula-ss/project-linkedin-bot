@@ -17,6 +17,7 @@ import sys
 import random
 import traceback
 import unicodedata
+from .crash_files import create_crash_file
 
 def import_text(window: sg.Window, path: str):
     while True:
@@ -51,7 +52,8 @@ def avoid_runtime_error(window:sg.Window, message:str = '', text_color:str = 'bl
             if attempts > 10:
                 break
 
-def start_driver2(window: sg.Window):
+def start_driver2(window: sg.Window, find_data_file: Callable[[str], str]):
+    attempt = 0
     while True:
         thread = threading.current_thread()
         avoid_runtime_error(window, 'Iniciando o navegador... ')
@@ -60,13 +62,31 @@ def start_driver2(window: sg.Window):
         except SessionNotCreatedException:
             if getattr(thread, 'close_driver', False):
                 sys.exit()
-            avoid_runtime_error(window, 'Erro ao iniciar o navegador!\n', text_color='red')
-            continue
-        if getattr(thread, 'close_driver', False):
-            driver.quit()
-            sys.exit()
-        avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='driver_started', value=(driver, wait))
-        break
+            attempt += 1
+            avoid_runtime_error(window, f'Erro ao iniciar o navegador! (tentativa {attempt}/10)\n', text_color='red')
+            if attempt >= 10:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
+                tb_txt = "".join(tb.format_exception_only())
+                print(tb_txt)
+                create_crash_file(find_data_file, tb_txt)
+                break
+            else:
+                continue
+        except WebDriverException:
+            avoid_runtime_error(window, f'Erro ao iniciar o navegador!\n', text_color='red')
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
+            tb_txt = "".join(tb.format_exception_only())
+            print(tb_txt)
+            create_crash_file(find_data_file, tb_txt)
+            break
+        else:
+            if getattr(thread, 'close_driver', False):
+                driver.quit()
+                sys.exit()
+            avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='driver_started', value=(driver, wait))
+            break
 
 def open_linkedin(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
     # open Linkedin
