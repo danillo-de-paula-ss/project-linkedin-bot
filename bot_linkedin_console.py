@@ -129,8 +129,8 @@ if __name__ == '__main__':
 
     print('Iniciando navegador...')
     driver, wait = start_driver()
-    # my_username = 'nerdpesquisando@gmail.com'
-    # my_password = 'sagavazas1234'
+    # my_username = ''
+    # my_password = ''
     # key_message = 'Eu quero'
     # link_to_share = 'https://www.youtube.com/'
     # post_selected = 0
