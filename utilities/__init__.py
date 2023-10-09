@@ -350,10 +350,10 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
             avoid_runtime_error(window, 'OK!\n', 'green')
         except Exception as err:
             if isinstance(err, BotStopped):
-                avoid_runtime_error(window, 'Bot encerrado!\n', 'red', write_event=True, key='bot_stopped', value='')
                 if is_other_tab:
                     driver.close()
                     driver.switch_to.window(initial_tab)
+                avoid_runtime_error(window, 'Bot encerrado!\n', 'red', write_event=True, key='bot_stopped', value='')
             else:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
