@@ -23,8 +23,8 @@ def start_driver():
         'profile.default_content_setting_values.automatic_downloads': 1,
     })
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    executable_path = r'chromedriver\115.0.5790.13\chromedriver.exe'
-    # executable_path = r'chromedriver\117.0.5938.88\chromedriver.exe'
+    # executable_path = r'chromedriver\115.0.5790.13\chromedriver.exe'
+    executable_path = r'chromedriver\117.0.5938.88\chromedriver.exe'
     # executable_path = ChromeDriverManager().install()
     driver = webdriver.Chrome(service=Service(executable_path),
                               options=chrome_options)
