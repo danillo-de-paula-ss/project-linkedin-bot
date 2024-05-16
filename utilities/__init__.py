@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions
 from time import sleep
 from typing import Any, Callable
 import PySimpleGUI as sg
-import pyperclip as pc
+# import pyperclip as pc
 import threading
 import sys
 import random
@@ -318,8 +318,6 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                                     sleep(0.1)
                                     driver.execute_script(f"arguments[0].innerHTML = '{texts[k]}'",
                                                           fields[k])
-                                    # fields[k].send_keys(Keys.END + Keys.ARROW_DOWN * 10 + \
-                                    #                     ('\n.' if k + 1 < len(texts) else ''))
                                     sleep(0.1)
                                     fields[k].send_keys(Keys.END)
                                     sleep(0.1)
