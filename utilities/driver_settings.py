@@ -13,7 +13,7 @@ def start_driver():
     logging.getLogger('WDM').setLevel(logging.NOTSET)
     os.environ['WDM_LOG'] = "false"
     chrome_options = Options()
-    arguments = ['--lang=pt-BR', '--window-size=1200,700', '--incognito', '--log-level=3']
+    arguments = ['--lang=pt-BR', '--window-size=1200,700', '--incognito','--log-level=3']
     for argument in arguments:
         chrome_options.add_argument(argument)
     chrome_options.add_experimental_option('prefs', {
@@ -24,8 +24,8 @@ def start_driver():
     })
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
     # executable_path = r'chromedriver\115.0.5790.13\chromedriver.exe'
-    # executable_path = r'chromedriver\117.0.5938.88\chromedriver.exe'
-    executable_path = ChromeDriverManager().install()
+    executable_path = r'chromedriver\117.0.5938.88\chromedriver.exe'
+    # executable_path = ChromeDriverManager().install()
     driver = webdriver.Chrome(service=Service(executable_path),
                               options=chrome_options)
     driver.maximize_window()

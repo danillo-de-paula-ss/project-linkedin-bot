@@ -226,7 +226,7 @@ class Program:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-nb', '--nobrowser', action='store_true', help='Does not open the browser')
+    parser.add_argument('-nb', '--nobrowser', action='store_true', help='Do not open the browser')
     parser.add_argument('-dv', '--dev', action='store_true', help='Enable developer mode')
     parser.add_argument('-db', '--debug', action='store_true', help='Enable debug mode')
     args = parser.parse_args()
