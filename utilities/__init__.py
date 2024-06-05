@@ -105,14 +105,14 @@ def check_login_page(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
         sleep(5)
         try:
             button_login: WebElement = driver.find_element(By.XPATH, '//button[@class="authwall-join-form__form-toggle--bottom form-toggle"]')
-            avoid_runtime_error(window, 'Clicando em "Entre"... ')
+            avoid_runtime_error(window, 'Clicando em "Entrar"... ')
             button_login.click()
             avoid_runtime_error(window, 'OK!\n', 'green')
             break
         except NoSuchElementException:
             sleep(5)
             try:
-                driver.find_element(By.XPATH, '//button[contains(text(),"Entrar")]')
+                driver.find_element(By.XPATH, '//a[contains(text(),"Entrar")]').click()
                 break
             except NoSuchElementException:
                 pass
@@ -123,7 +123,11 @@ def check_login_page(window: sg.Window, driver: WebDriver, wait: WebDriverWait):
 
 def login(window: sg.Window, driver: WebDriver, wait: WebDriverWait, username: str, password: str):
     avoid_runtime_error(window, 'Logando no site... ')
-    username_field: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//input[@autocomplete="username"]')))
+    try:
+        username_field: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//input[@autocomplete="webauthn"]')))
+    except TimeoutException:
+        username_field: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//input[@autocomplete="username"]')))
+        driver.execute_script("window.scrollTo(0, -document.body.scrollHeight)")
     username_field.send_keys(username)
     sleep(1)
     password_field: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//input[@autocomplete="current-password"]')))
@@ -165,23 +169,23 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                     
                     avoid_runtime_error(window, 'OK!\n', 'green')
                     avoid_runtime_error(window, 'Filtrando comentários... ')
-                    filter_button: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//button[@role="checkbox" and contains(@aria-label, "Coment")]')))
+                    filter_button: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//li[@class="org-menu__item" and @data-test-org-menu__item="horizontal"][2]/a')))
                     
                     # stop bot
                     if not getattr(thread, 'do_run', True):
                         raise BotStopped
                     
-                    if filter_button.get_attribute('aria-checked') == 'false':
-                        button_y = filter_button.location['y']
-                        i = 1
-                        while True:
-                            try:
-                                filter_button.click()
-                                break
-                            except ElementClickInterceptedException:
-                                driver.execute_script(f"window.scrollTo(0, {button_y - i * 100})")
-                                sleep(1)
-                                i += 1
+                    # if filter_button.get_attribute('aria-checked') == 'false':
+                    button_y = filter_button.location['y']
+                    i = 1
+                    while True:
+                        try:
+                            filter_button.click()
+                            break
+                        except ElementClickInterceptedException:
+                            driver.execute_script(f"window.scrollTo(0, {button_y - i * 100})")
+                            sleep(1)
+                            i += 1
                 except TimeoutException:
                     pass
                 
@@ -216,7 +220,7 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                 avoid_runtime_error(window, 'OK!\n', 'green')
 
             avoid_runtime_error(window, 'Encontrando comentários... ')
-            comments: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="scaffold-finite-scroll__content"]/div/div/article/div[2]')))
+            comments: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="scaffold-finite-scroll__content"]/div/div/article/div/div[2]')))
 
             # stop bot
             if not getattr(thread, 'do_run', True):
@@ -282,7 +286,7 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                             avoid_runtime_error(window, 'OK!\n', 'green')
                             data_id = driver.current_url.split('%')[-2].removeprefix('2C')
                             avoid_runtime_error(window, 'Identificando se o comentário já foi respondido... ')
-                            replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span/span')
+                            replies: list[WebElement] = driver.find_elements(By.XPATH, f'//article[contains(@data-id, "{data_id}")]/div[6]/div[4]/div/article/div[3]/div/div/span/div/span')
                             replies_text = [reply.get_attribute('innerText') for reply in replies]
                             reply_found = any(map(lambda reply: check_text(
                                 ''.join([t for t in text_to_write if t not in ' \n']),
@@ -316,8 +320,7 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                                 for k in range(len(texts)):
                                     fields = driver.find_elements(By.XPATH, '//div[contains(@data-placeholder, "Responder em nome de")]/p')
                                     sleep(0.1)
-                                    driver.execute_script(f"arguments[0].innerHTML = '{texts[k]}'",
-                                                          fields[k])
+                                    driver.execute_script(f"arguments[0].innerHTML = '{texts[k]}'", fields[k])
                                     sleep(0.1)
                                     fields[k].send_keys(Keys.END)
                                     sleep(0.1)
@@ -337,6 +340,7 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                             sleep(2)
                             driver.close()
                             driver.switch_to.window(initial_tab)
+                            is_other_tab = False
                 else:
                     avoid_runtime_error(window, 'Não contém!\n', 'red')
             avoid_runtime_error(window, f'Esperando {wait_time} minuto{"s" if wait_time > 1 else ""}... ')
