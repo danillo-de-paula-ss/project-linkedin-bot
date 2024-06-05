@@ -52,8 +52,9 @@ class Program:
         left_frame = [
             [sg.Column(column1, expand_x=True, vertical_alignment='top'), sg.Column(column2, expand_x=True)],
             [sg.HorizontalSeparator('blue')],
-            [sg.Text('Quantidade de rolagens da página:', size=(40, 0)), sg.Spin(list(range(0, 10)), 0, readonly=True, size=(10, 0), key='-SPIN-SCROLL-')],
-            [sg.Text('Tempo de espera em minutos para atualizar a página:', size=(40, 0)), sg.Spin(list(range(1, 60)), 1, readonly=True, size=(10, 0), key='-SPIN-WAIT-')],
+            [sg.Text('Página da empresa selecionada:', size=(40, 0)), sg.Combo([], '', readonly=True, size=(20, 0), key='-COMBO-SELECT-PAGE-', auto_size_text=False)],
+            [sg.Text('Quantidade de rolagens da página:', size=(40, 0)), sg.Spin(list(range(0, 10)), 0, readonly=True, size=(20, 0), key='-SPIN-SCROLL-')],
+            [sg.Text('Tempo de espera em minutos para atualizar a página:', size=(40, 0)), sg.Spin(list(range(1, 60)), 1, readonly=True, size=(20, 0), key='-SPIN-WAIT-')],
             [sg.Button('Iniciar o Bot', key='-START-BOT-', button_color='gray', expand_x=True, auto_size_button=False, disabled=True), sg.Button('Parar o Bot', key='-STOP-BOT-', button_color=('white', 'gray'), expand_x=True, auto_size_button=False, disabled=True)]
         ]
         right_frame = [
@@ -91,6 +92,7 @@ class Program:
         driver, wait = None, None
         login_frame_keys = ['-USERNAME-', '-PASSWORD-']
         login_frame_text_keys = ['-USERNAME-TEXT-', '-PASSWORD-TEXT-']
+        pages_element = []
 
         # main program
         while True:
@@ -178,7 +180,11 @@ class Program:
                     thread_login.start()
                 elif event == 'login_complete':
                     thread_login.join()
-                    main_window['-OUT-'].update('Por favor, vá para a página de postagens.\n', text_color_for_value='red', append=True)
+                    # -COMBO-SELECT-PAGE-
+                    pages_element = values['login_complete']
+                    pages = [e.text for e in pages_element]
+                    main_window['-COMBO-SELECT-PAGE-'].update(pages[0], pages)
+                    # main_window['-OUT-'].update('Por favor, vá para a página de postagens.\n', text_color_for_value='red', append=True)
                     main_window['-START-BOT-'].update(disabled=False, button_color='green')
                 
                 # import text file
@@ -202,6 +208,8 @@ class Program:
                                                         wait,
                                                         values['-KEY-MESSAGE-'],
                                                         values['-TEXT-TO-WRITE-'],
+                                                        pages_element,
+                                                        values['-COMBO-SELECT-PAGE-'],
                                                         int(values['-SPIN-SCROLL-']),
                                                         int(values['-SPIN-WAIT-']),
                                                         debug,

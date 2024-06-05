@@ -134,9 +134,11 @@ def login(window: sg.Window, driver: WebDriver, wait: WebDriverWait, username: s
     password_field.send_keys(password)
     sleep(1)
     driver.find_element(By.XPATH, '//button[contains(text(),"Entrar")]').click()
-    avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='login_complete', value='')
+    sleep(1)
+    pages: list[WebElement] = wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, '//div[@class="relative block"]/div/a[2]/div')))
+    avoid_runtime_error(window, 'OK!\n', 'green', write_event=True, key='login_complete', value=pages)
 
-def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', text_to_write: str = '', page_scrolls: int = 0, wait_time: int = 0, debug: bool = False, find_data_file: Callable = None):
+def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_message: str = '', text_to_write: str = '', pages_element: list[WebElement] = [], page_selected: str = '', page_scrolls: int = 0, wait_time: int = 0, debug: bool = False, find_data_file: Callable = None):
     first = True
     is_other_tab = False
     if debug:
@@ -150,6 +152,25 @@ def start_bot2(window: sg.Window, driver: WebDriver, wait: WebDriverWait, key_me
                 thread = threading.current_thread()
                 # action_chains = ActionChains(driver)
                 try:
+                    avoid_runtime_error(window, f'Clicando em "{page_selected}"... ')
+                    pages = [e.text for e in pages_element]
+                    index = pages.index(page_selected)    
+                    button_y = pages_element[index].location['y']
+                    i = 1
+                    while True:
+                        try:
+                            pages_element[index].click()
+                            break
+                        except ElementClickInterceptedException:
+                            driver.execute_script(f"window.scrollTo(0, {button_y - i * 100})")
+                            sleep(1)
+                            i += 1
+                            
+                    # stop bot
+                    if not getattr(thread, 'do_run', True):
+                        raise BotStopped
+                    
+                    avoid_runtime_error(window, 'OK!\n', 'green')
                     avoid_runtime_error(window, 'Clicando em "Atividades"... ')
                     activity_button: WebElement = wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//span[text()="Atividades"]')))
                     button_y = activity_button.location['y']
