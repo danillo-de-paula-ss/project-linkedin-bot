@@ -22,7 +22,10 @@ pip install -r requirements.txt
 ## ☕ Usando o bot
 Para usar o bot, execute o arquivo linkedin_bot.py (versão Python) ou linkedin_bot.exe (versão Windows).
 Quando iniciar pela primeira vez, ele vai abrir uma janela perguntando se você deseja que o processo de login seja automático ou não. Imagem abaixo:
+
 ![image](https://github.com/danillo-de-paula-ss/project-linkedin-bot/blob/main/screenshots/initial_settings.png)
+
 Se a escolha for automático, você deve inserir o usuário e a senha da conta do LinkedIn para que o bot possa fazer o login.
 Uma vez feito o processo, o programa vai salvar as informações em um arquivo chamado "data.pkl", fechará a janela inicial e depois abrirá a janela principal para configuração do bot. E nas próximas vezes que for executar o programa, a janela para configurar o bot será a única a ser aberta. Imagem abaixo:
+
 ![image](https://github.com/danillo-de-paula-ss/project-linkedin-bot/blob/main/screenshots/main_program.png)
