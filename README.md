@@ -1,5 +1,5 @@
 # project-linkedin-bot
-> Este projeto é um bot que responde automaticamente cada comentário das postagens das páginas de sua empresa que contenham uma determinada palavra-chave.
+> Este projeto é um bot que responde automaticamente cada comentário das postagens das suas páginas do LinkedIn que contenham uma determinada palavra-chave.
 
 ## 💻 Pré-requisitos
 Antes de começar, tenha o navegador Google Chrome instalado.
@@ -26,6 +26,11 @@ Quando iniciar pela primeira vez, ele vai abrir uma janela perguntando se você 
 ![image](https://github.com/danillo-de-paula-ss/project-linkedin-bot/blob/main/screenshots/initial_settings.png)
 
 Se a escolha for automático, você deve inserir o usuário e a senha da conta do LinkedIn para que o bot possa fazer o login.
-Uma vez feito o processo, o programa vai salvar as informações em um arquivo chamado "data.pkl", fechará a janela inicial e depois abrirá a janela principal para configuração do bot. E nas próximas vezes que for executar o programa, a janela para configurar o bot será a única a ser aberta. Imagem abaixo:
+Uma vez feito o processo, o programa vai salvar as informações em um arquivo chamado "data.pkl", fechará a janela inicial e depois abrirá a janela principal para configuração do bot.
+Nas próximas vezes que for executar o programa, a janela para configurar o bot será a única a ser aberta. Imagem abaixo:
 
 ![image](https://github.com/danillo-de-paula-ss/project-linkedin-bot/blob/main/screenshots/main_program.png)
+
+Na janela principal, o quadro esquerdo é as configurações do bot enquanto o direito é log de atividades do bot.
+No quadro esquerdo, você pode escrever a palavra-chave que bot vai usar para checar cada comentário nas suas postagens; pode escrever o texto que o bot vai escrever nas respostas (pode até importar o texto se quiser);
+escolher qual das suas páginas ele vai acessar; definir a quantidade de rolagens que o bot vai fazer na página para carregar os comentários; definir a quantidade de minutos que o bot terá de esperar para refazer o processo de checar os comentários e responde-los; e, por fim, clicar em "Iniciar o bot" ou "Parar o bot".
