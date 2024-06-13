@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 test.py
+test.ipynb
 data.pkl
 .rest/
 crashes/
